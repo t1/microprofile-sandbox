@@ -10,7 +10,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Defines the http status code to be used for the annotated exception.
  * This will also be included as the <code>status</code> field of the
- * problem detail.
+ * problem detail. Defaults to 400 Bad Request.
  */
 @Retention(RUNTIME)
 @Target(TYPE)

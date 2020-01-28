@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
@@ -15,7 +16,7 @@ class ExtensionMappingIT {
 
     @Test void shouldMapExtensionStringMethod() {
         testPost("/custom/extension-method", ProblemDetailWithExtensionString.class)
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some")
             .hasTitle("Some")
@@ -26,7 +27,7 @@ class ExtensionMappingIT {
 
     @Test void shouldMapExtensionStringMethodWithAnnotatedName() {
         testPost("/custom/extension-method-with-name", ProblemDetailWithExtensionStringFoo.class)
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
@@ -37,7 +38,7 @@ class ExtensionMappingIT {
 
     @Test void shouldMapExtensionStringField() {
         testPost("/custom/extension-field", ProblemDetailWithExtensionString.class)
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
@@ -48,7 +49,7 @@ class ExtensionMappingIT {
 
     @Test void shouldMapExtensionStringFieldWithAnnotatedName() {
         testPost("/custom/extension-field-with-name", ProblemDetailWithExtensionStringFoo.class)
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
@@ -59,7 +60,7 @@ class ExtensionMappingIT {
 
     @Test void shouldMapMultiplePackagePrivateExtensions() {
         testPost("/custom/multi-extension", ProblemDetailWithMultipleExtensions.class)
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")

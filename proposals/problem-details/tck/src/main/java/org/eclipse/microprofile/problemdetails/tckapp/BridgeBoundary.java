@@ -16,16 +16,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
 import java.net.URI;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 
 @Slf4j
 @Path("/bridge")
 public class BridgeBoundary {
     private static final String BASE_URI = "http://localhost:8080/problem-details-tck";
-    private static final Entity<String> EMPTY = Entity.entity("{}", APPLICATION_JSON_TYPE);
 
     /** how to call the target */
     public enum Mode {
@@ -40,7 +40,7 @@ public class BridgeBoundary {
     }
 
     /** how should the target behave */
-    public enum State {ok, fails}
+    public enum State {ok, raw, fails}
 
     @Data @NoArgsConstructor @AllArgsConstructor
     public static class Reply {
@@ -98,11 +98,13 @@ public class BridgeBoundary {
     }
 
     @Path("/target/{state}")
-    @GET public Reply target(@PathParam("state") State state) {
+    @GET public Response target(@PathParam("state") State state) {
         log.debug("target {}", state);
         switch (state) {
             case ok:
-                return new Reply("okay");
+                return Response.ok(new Reply("okay")).build();
+            case raw:
+                return Response.status(FORBIDDEN).build();
             case fails:
                 throw new ApiException();
         }

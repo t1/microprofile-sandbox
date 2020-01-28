@@ -5,7 +5,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
 import static test.ContainerLaunchingExtension.testPost;
 
@@ -14,7 +13,7 @@ class CustomExceptionIT {
 
     @Test void shouldMapCustomRuntimeException() {
         testPost("/custom/runtime-exception")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:custom")
             .hasTitle("Custom")
@@ -34,7 +33,7 @@ class CustomExceptionIT {
 
     @Test void shouldMapExplicitType() {
         testPost("/custom/explicit-type")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("http://error-codes.org/out-of-memory")
             .hasTitle("Some")
@@ -44,7 +43,7 @@ class CustomExceptionIT {
 
     @Test void shouldMapExplicitTitle() {
         testPost("/custom/explicit-title")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some")
             .hasTitle("Some Title")
@@ -65,7 +64,7 @@ class CustomExceptionIT {
 
     @Test void shouldMapDetailMethod() {
         testPost("/custom/public-detail-method")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
@@ -75,7 +74,7 @@ class CustomExceptionIT {
 
     @Test void shouldMapPrivateDetailMethod() {
         testPost("/custom/private-detail-method")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
@@ -85,7 +84,7 @@ class CustomExceptionIT {
 
     @Test void shouldMapFailingDetailMethod() {
         testPost("/custom/failing-detail-method")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:failing-detail")
             .hasTitle("Failing Detail")
@@ -95,7 +94,7 @@ class CustomExceptionIT {
 
     @Test void shouldMapPublicDetailFieldOverridingMessage() {
         testPost("/custom/public-detail-field")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
@@ -105,7 +104,7 @@ class CustomExceptionIT {
 
     @Test void shouldMapPrivateDetailField() {
         testPost("/custom/private-detail-field")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
@@ -115,7 +114,7 @@ class CustomExceptionIT {
 
     @Test void shouldMapMultipleDetailFields() {
         testPost("/custom/multi-detail-fields")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
@@ -125,7 +124,7 @@ class CustomExceptionIT {
 
     @Test void shouldMapDetailMethodAndTwoFields() {
         testPost("/custom/mixed-details")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
@@ -135,7 +134,7 @@ class CustomExceptionIT {
 
     @Test void shouldFailToMapDetailMethodTakingAnArgument() {
         testPost("/custom/detail-method-arg")
-            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")

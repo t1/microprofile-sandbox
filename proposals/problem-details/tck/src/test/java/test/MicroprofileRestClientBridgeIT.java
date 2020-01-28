@@ -10,6 +10,7 @@ import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -40,6 +41,16 @@ class MicroprofileRestClientBridgeIT {
         then(response.getStatusInfo()).isEqualTo(OK);
         then(response.getMediaType()).isEqualTo(APPLICATION_JSON_TYPE);
         then(response.readEntity(String.class)).isEqualTo("{\"value\":\"okay\"}");
+    }
+
+    @EnumSource(BridgeBoundary.Mode.class)
+    @ParameterizedTest void shouldMapBridgedRaw(BridgeBoundary.Mode mode) {
+        Response response = get("/bridge/indirect/raw", mode);
+
+        then(response.getStatusInfo()).isEqualTo(FORBIDDEN);
+        if (response.hasEntity()) {
+            then(response.readEntity(String.class)).isEmpty();
+        }
     }
 
     @EnumSource(BridgeBoundary.Mode.class)
