@@ -11,7 +11,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import java.net.URI;
 
-import static javax.ws.rs.core.Response.Status.FORBIDDEN;
+import static org.eclipse.microprofile.problemdetails.ResponseStatus.FORBIDDEN;
 
 @Path("/custom")
 public class CustomExceptionBoundary {

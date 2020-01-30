@@ -14,7 +14,7 @@ import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON_TYPE;
+import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
 import static test.ContainerLaunchingExtension.target;
 import static test.ContainerLaunchingExtension.thenProblemDetail;
 
@@ -59,7 +59,7 @@ class MicroprofileRestClientBridgeIT {
 
         thenProblemDetail(response)
             .hasStatus(BAD_REQUEST)
-            .hasContentType(PROBLEM_DETAIL_JSON_TYPE)
+            .hasContentType(PROBLEM_DETAIL_JSON)
             .hasTitle("Api")
             .hasType("urn:problem-type:api")
             .hasUuidInstance();
