@@ -2,15 +2,15 @@ package test;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import org.assertj.core.api.BDDAssertions;
-import org.eclipse.microprofile.problemdetails.tckapp.ValidationBoundary.Address;
-import org.eclipse.microprofile.problemdetails.tckapp.ValidationBoundary.Person;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import test.ContainerLaunchingExtension.ProblemDetailAssert;
 
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,6 +26,19 @@ import static test.ContainerLaunchingExtension.thenProblemDetail;
 
 @ExtendWith(ContainerLaunchingExtension.class)
 class ValidationFailedExceptionMappingIT {
+    static @Value class Address {
+        String street;
+        int zipCode;
+        String city;
+    }
+
+    static @Value class Person {
+        String firstName;
+        String lastName;
+        LocalDate born;
+        List<Address> address;
+    }
+
     @Test void shouldMapAnnotatedValidationFailedException() {
         Person person = new Person(null, "", LocalDate.now().plusDays(3),
             singletonList(new Address(null, -1, null)));
@@ -79,8 +92,8 @@ class ValidationFailedExceptionMappingIT {
         return containsMust.get() ? "must" : "may";
     }
 
-    @Data @EqualsAndHashCode(callSuper = true)
-    public static class ValidationProblemDetail extends ProblemDetail {
+    @EqualsAndHashCode(callSuper = true)
+    static @Data class ValidationProblemDetail extends ProblemDetail {
         private Map<String, String> violations;
     }
 }

@@ -1,6 +1,7 @@
 package test;
 
 import com.github.t1.testcontainers.jee.JeeContainer;
+import com.github.t1.testcontainers.jee.Mod;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.Extension;
@@ -13,8 +14,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
+import static com.github.t1.testcontainers.jee.AddLibMod.addLib;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,8 +33,12 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
         if (System.getProperty("testcontainer-running") != null) {
             BASE_URI = URI.create(System.getProperty("testcontainer-running"));
         } else if (BASE_URI == null) {
+            List<Mod> mods = new ArrayList<>();
+            // FIXME add libs via system property
+            mods.add(addLib("urn:mvn:com.github.t1:problem-details-ri:2.0.0-SNAPSHOT:jar"));
             JeeContainer container = JeeContainer.create()
-                .withDeployment("target/problem-details-test.war");
+                .withDeployment("urn:mvn:io.microprofile.sandbox:problem-details.tck-war:1.0.0-SNAPSHOT:war",
+                    mods.toArray(new Mod[0]));
             container.start();
             BASE_URI = container.baseUri();
         }

@@ -24,10 +24,11 @@ import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 
 @Slf4j
 @Path("/bridge")
-public class BridgeBoundary {
+public class
+BridgeBoundary {
     private static final String BASE_URI = "http://localhost:8080/problem-details-tck";
 
-    /** how to call the target */
+    /** how to call the target -- duplicated in MicroprofileRestClientBridgeIT */
     public enum Mode {
         /** JAX-RS WebTarget */
         jaxRs,

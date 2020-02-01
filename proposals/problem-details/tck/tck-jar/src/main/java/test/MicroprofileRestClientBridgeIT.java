@@ -1,6 +1,5 @@
 package test;
 
-import org.eclipse.microprofile.problemdetails.tckapp.BridgeBoundary;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,21 +20,33 @@ import static test.ContainerLaunchingExtension.thenProblemDetail;
 @ExtendWith(ContainerLaunchingExtension.class)
 class MicroprofileRestClientBridgeIT {
 
+    /** how to call the target -- duplicated in BridgeBoundary */
+    public enum Mode {
+        /** JAX-RS WebTarget */
+        jaxRs,
+
+        /** Manually build a Microprofile Rest Client */
+        mMpRest,
+
+        /** Injected Microprofile Rest Client */
+        iMpRest
+    }
+
     @Test void shouldFailValidationWithoutMode() {
         Response response = get("/bridge/indirect/ok", null);
 
         thenProblemDetail(response).hasType("urn:problem-type:validation-failed");
     }
 
-    @EnumSource(BridgeBoundary.Mode.class)
-    @ParameterizedTest void shouldFailWithUnknownState(BridgeBoundary.Mode mode) {
+    @EnumSource(Mode.class)
+    @ParameterizedTest void shouldFailWithUnknownState(Mode mode) {
         Response response = get("/bridge/indirect/unknown", mode);
 
         thenProblemDetail(response).hasStatus(NOT_FOUND).hasType("urn:problem-type:not-found");
     }
 
-    @EnumSource(BridgeBoundary.Mode.class)
-    @ParameterizedTest void shouldMapBridgedOkay(BridgeBoundary.Mode mode) {
+    @EnumSource(Mode.class)
+    @ParameterizedTest void shouldMapBridgedOkay(Mode mode) {
         Response response = get("/bridge/indirect/ok", mode);
 
         then(response.getStatusInfo()).isEqualTo(OK);
@@ -43,8 +54,8 @@ class MicroprofileRestClientBridgeIT {
         then(response.readEntity(String.class)).isEqualTo("{\"value\":\"okay\"}");
     }
 
-    @EnumSource(BridgeBoundary.Mode.class)
-    @ParameterizedTest void shouldMapBridgedRaw(BridgeBoundary.Mode mode) {
+    @EnumSource(Mode.class)
+    @ParameterizedTest void shouldMapBridgedRaw(Mode mode) {
         Response response = get("/bridge/indirect/raw", mode);
 
         then(response.getStatusInfo()).isEqualTo(FORBIDDEN);
@@ -53,8 +64,8 @@ class MicroprofileRestClientBridgeIT {
         }
     }
 
-    @EnumSource(BridgeBoundary.Mode.class)
-    @ParameterizedTest void shouldMapBridgedFail(BridgeBoundary.Mode mode) {
+    @EnumSource(Mode.class)
+    @ParameterizedTest void shouldMapBridgedFail(Mode mode) {
         Response response = get("/bridge/indirect/fails", mode);
 
         thenProblemDetail(response)
@@ -65,7 +76,7 @@ class MicroprofileRestClientBridgeIT {
             .hasUuidInstance();
     }
 
-    private Response get(String path, BridgeBoundary.Mode mode) {
+    private Response get(String path, Mode mode) {
         return target(path)
             .queryParam("mode", mode)
             .request(APPLICATION_JSON_TYPE)
