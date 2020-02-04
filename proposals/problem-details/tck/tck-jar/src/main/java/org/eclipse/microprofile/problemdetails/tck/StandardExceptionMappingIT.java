@@ -1,4 +1,4 @@
-package test;
+package org.eclipse.microprofile.problemdetails.tck;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,7 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_XML;
-import static test.ContainerLaunchingExtension.testPost;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.testPost;
 
 @ExtendWith(ContainerLaunchingExtension.class)
 class StandardExceptionMappingIT {

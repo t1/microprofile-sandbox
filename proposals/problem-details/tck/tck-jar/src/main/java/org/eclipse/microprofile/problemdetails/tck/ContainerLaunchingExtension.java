@@ -1,7 +1,9 @@
-package test;
+package org.eclipse.microprofile.problemdetails.tck;
 
+import com.github.t1.testcontainers.jee.AddLibMod;
 import com.github.t1.testcontainers.jee.JeeContainer;
 import com.github.t1.testcontainers.jee.Mod;
+import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.Extension;
@@ -14,14 +16,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
-import static com.github.t1.testcontainers.jee.AddLibMod.addLib;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Slf4j
 class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
     private static URI BASE_URI = null;
 
@@ -30,26 +31,28 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
      * https://www.testcontainers.org/test_framework_integration/manual_lifecycle_control/#singleton-containers
      */
     @Override public void beforeAll(ExtensionContext context) {
-        if (System.getProperty("testcontainer-running") != null) {
-            BASE_URI = URI.create(System.getProperty("testcontainer-running"));
+        if (System.getProperty("problemdetails-tck-running") != null) {
+            BASE_URI = URI.create(System.getProperty("problemdetails-tck-running"));
         } else if (BASE_URI == null) {
-            List<Mod> mods = new ArrayList<>();
-            // FIXME add libs via system property
-            mods.add(addLib("urn:mvn:com.github.t1:problem-details-ri:2.0.0-SNAPSHOT:jar"));
+            Mod[] mods = Stream.of(System.getProperty("problemdetails-tck-libs", "")
+                .split("\\s"))
+                .filter(uri -> !uri.isEmpty())
+                .map(AddLibMod::addLib)
+                .toArray(Mod[]::new);
             JeeContainer container = JeeContainer.create()
-                .withDeployment("urn:mvn:io.microprofile.sandbox:problem-details.tck-war:1.0.0-SNAPSHOT:war",
-                    mods.toArray(new Mod[0]));
+                // TODO get the version, maybe from the manifest
+                .withDeployment("urn:mvn:io.microprofile.sandbox:problem-details.tck-war:1.0.0-SNAPSHOT:war", mods);
             container.start();
             BASE_URI = container.baseUri();
         }
     }
 
     public static ProblemDetailAssert<ProblemDetail> testPost(String path) {
-        return thenProblemDetail(post(path));
+        return thenProblemDetail(target(path).request(APPLICATION_JSON_TYPE).post(null));
     }
 
     public static <T extends ProblemDetail> ProblemDetailAssert<T> testPost(String path, Class<T> type) {
-        return thenProblemDetail(post(path), type);
+        return thenProblemDetail(target(path).request(APPLICATION_JSON_TYPE).post(null), type);
     }
 
     public static ProblemDetailAssert<ProblemDetail> testPost(String path, String accept) {
@@ -61,7 +64,8 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
     }
 
     public static <T> ResponseAssert<T> testPost(String path, String accept, Class<T> type) {
-        return new ResponseAssert<>(target(path).request(MediaType.valueOf(accept)).post(null), type);
+        Response response = target(path).request(MediaType.valueOf(accept)).post(null);
+        return new ResponseAssert<>(response, type);
     }
 
     public static Response post(String path) {
@@ -69,7 +73,9 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
     }
 
     public static WebTarget target(String path) {
-        return target().path(path);
+        WebTarget target = target().path(path);
+        log.info("target: {}", target.getUri());
+        return target;
     }
 
     private static final Client CLIENT = ClientBuilder.newClient();
@@ -146,7 +152,9 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
 
         public ResponseAssert(Response response, Class<T> type) {
             this.response = response;
-            assertThat(this.response.hasEntity()).describedAs("response has entity").isTrue();
+            assertThat(this.response.hasEntity())
+                .describedAs("response has entity")
+                .isTrue();
             this.entity = this.response.readEntity(type);
         }
 

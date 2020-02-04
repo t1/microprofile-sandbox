@@ -1,4 +1,4 @@
-package test;
+package org.eclipse.microprofile.problemdetails.tck;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
-import static test.ContainerLaunchingExtension.testPost;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.testPost;
 
 @ExtendWith(ContainerLaunchingExtension.class)
 class CustomExceptionIT {

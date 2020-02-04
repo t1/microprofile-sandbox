@@ -1,4 +1,4 @@
-package test;
+package org.eclipse.microprofile.problemdetails.tck;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -6,10 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
-import static test.ContainerLaunchingExtension.testPost;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.testPost;
 
 @ExtendWith(ContainerLaunchingExtension.class)
 class ExtensionMappingIT {

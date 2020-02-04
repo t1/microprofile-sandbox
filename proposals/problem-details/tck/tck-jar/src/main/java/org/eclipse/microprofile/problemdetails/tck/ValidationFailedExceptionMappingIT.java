@@ -1,13 +1,15 @@
-package test;
+package org.eclipse.microprofile.problemdetails.tck;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.NoArgsConstructor;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import test.ContainerLaunchingExtension.ProblemDetailAssert;
+import org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.ProblemDetailAssert;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.List;
@@ -21,18 +23,20 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.fail;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
-import static test.ContainerLaunchingExtension.target;
-import static test.ContainerLaunchingExtension.thenProblemDetail;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.target;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.thenProblemDetail;
 
 @ExtendWith(ContainerLaunchingExtension.class)
 class ValidationFailedExceptionMappingIT {
-    static @Value class Address {
+    @NoArgsConstructor @AllArgsConstructor
+    public static @Data class Address {
         String street;
         int zipCode;
         String city;
     }
 
-    static @Value class Person {
+    @NoArgsConstructor @AllArgsConstructor
+    public static @Data class Person {
         String firstName;
         String lastName;
         LocalDate born;
@@ -42,8 +46,9 @@ class ValidationFailedExceptionMappingIT {
     @Test void shouldMapAnnotatedValidationFailedException() {
         Person person = new Person(null, "", LocalDate.now().plusDays(3),
             singletonList(new Address(null, -1, null)));
+        WebTarget target = target("/validation");
 
-        Response response = target("/validation").request(APPLICATION_JSON_TYPE)
+        Response response = target.request(APPLICATION_JSON_TYPE)
             .post(entity(person, APPLICATION_JSON_TYPE));
 
         thenValidationFailed(response);
@@ -93,7 +98,7 @@ class ValidationFailedExceptionMappingIT {
     }
 
     @EqualsAndHashCode(callSuper = true)
-    static @Data class ValidationProblemDetail extends ProblemDetail {
+    public static @Data class ValidationProblemDetail extends ProblemDetail {
         private Map<String, String> violations;
     }
 }

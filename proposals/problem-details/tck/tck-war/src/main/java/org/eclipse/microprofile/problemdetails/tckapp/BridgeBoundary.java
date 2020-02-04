@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.problemdetails.ResponseStatus;
+import org.eclipse.microprofile.problemdetails.Status;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -24,20 +26,33 @@ import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 
 @Slf4j
 @Path("/bridge")
-public class
-BridgeBoundary {
-    private static final String BASE_URI = "http://localhost:8080/problem-details-tck";
+public class BridgeBoundary {
+    private static final String BASE_URI = "http://localhost:8080/problem-details.tck-war";
 
     /** how to call the target -- duplicated in MicroprofileRestClientBridgeIT */
-    public enum Mode {
+    @SuppressWarnings("unused") public enum Mode {
         /** JAX-RS WebTarget */
-        jaxRs,
+        webTarget {
+            @Override public API api(BridgeBoundary context) {
+                return context::jaxRsCall;
+            }
+        },
 
         /** Manually build a Microprofile Rest Client */
-        mMpRest,
+        mpm {
+            @Override public API api(BridgeBoundary context) {
+                return RestClientBuilder.newBuilder().baseUri(URI.create(BASE_URI)).build(API.class);
+            }
+        },
 
         /** Injected Microprofile Rest Client */
-        iMpRest
+        mpi {
+            @Override public API api(BridgeBoundary context) {
+                return context.target;
+            }
+        };
+
+        public abstract API api(BridgeBoundary context);
     }
 
     /** how should the target behave */
@@ -48,11 +63,8 @@ BridgeBoundary {
         private String value;
     }
 
-    public static class ApiException extends IllegalArgumentException {}
-
-    @Inject @RestClient API target;
-
-    private final Client rest = ClientBuilder.newClient();
+    @Status(ResponseStatus.FORBIDDEN)
+    public static class ApiException extends RuntimeException {}
 
     @RegisterRestClient(baseUri = BASE_URI)
     public interface API {
@@ -60,38 +72,28 @@ BridgeBoundary {
         @GET Reply request(@PathParam("state") State state) throws ApiException;
     }
 
+    @Inject @RestClient API target;
+
+    private final Client rest = ClientBuilder.newClient();
+
     @Path("/indirect/{state}")
     @GET public Reply indirect(@PathParam("state") State state, @NotNull @QueryParam("mode") Mode mode) {
-        log.debug("call indirect {} :: {}", state, mode);
+        log.info("call indirect {} :: {}", state, mode);
 
-        API target = target(mode);
+        API target = mode.api(this);
 
         try {
             Reply reply = target.request(state);
-            log.debug("indirect call reply {}", reply);
+            log.info("indirect call reply {}", reply);
             return reply;
         } catch (RuntimeException e) {
-            log.debug("indirect call exception", e);
+            log.info("indirect call exception", e);
             throw e;
         }
     }
 
-    private API target(@QueryParam("mode") Mode mode) {
-        switch (mode) {
-            case jaxRs:
-                return this::jaxRsCall;
-            case mMpRest:
-                return RestClientBuilder.newBuilder().baseUri(URI.create(BASE_URI)).build(API.class);
-            case iMpRest:
-                return this.target;
-        }
-        throw new UnsupportedOperationException();
-    }
-
     private Reply jaxRsCall(State state) {
-        // ProblemDetailExceptionRegistry.register(ApiException.class);
         return rest.target(BASE_URI)
-            // .register(ProblemDetailClientResponseFilter.class)
             .path("/bridge/target")
             .path(state.toString())
             .request(APPLICATION_JSON_TYPE)
@@ -100,7 +102,7 @@ BridgeBoundary {
 
     @Path("/target/{state}")
     @GET public Response target(@PathParam("state") State state) {
-        log.debug("target {}", state);
+        log.info("target {}", state);
         switch (state) {
             case ok:
                 return Response.ok(new Reply("okay")).build();
