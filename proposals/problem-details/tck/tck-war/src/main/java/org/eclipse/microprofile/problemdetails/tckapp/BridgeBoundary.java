@@ -55,9 +55,6 @@ public class BridgeBoundary {
         public abstract API api(BridgeBoundary context);
     }
 
-    /** how should the target behave */
-    public enum State {ok, raw, fails}
-
     @Data @NoArgsConstructor @AllArgsConstructor
     public static class Reply {
         private String value;
@@ -69,7 +66,7 @@ public class BridgeBoundary {
     @RegisterRestClient(baseUri = BASE_URI)
     public interface API {
         @Path("/bridge/target/{state}")
-        @GET Reply request(@PathParam("state") State state) throws ApiException;
+        @GET Reply request(@PathParam("state") String state) throws ApiException;
     }
 
     @Inject @RestClient API target;
@@ -77,7 +74,7 @@ public class BridgeBoundary {
     private final Client rest = ClientBuilder.newClient();
 
     @Path("/indirect/{state}")
-    @GET public Reply indirect(@PathParam("state") State state, @NotNull @QueryParam("mode") Mode mode) {
+    @GET public Reply indirect(@PathParam("state") String state, @NotNull @QueryParam("mode") Mode mode) {
         log.info("call indirect {} :: {}", state, mode);
 
         API target = mode.api(this);
@@ -92,23 +89,23 @@ public class BridgeBoundary {
         }
     }
 
-    private Reply jaxRsCall(State state) {
+    private Reply jaxRsCall(String state) {
         return rest.target(BASE_URI)
             .path("/bridge/target")
-            .path(state.toString())
+            .path(state)
             .request(APPLICATION_JSON_TYPE)
             .get(Reply.class);
     }
 
     @Path("/target/{state}")
-    @GET public Response target(@PathParam("state") State state) {
+    @GET public Response target(@PathParam("state") String state) {
         log.info("target {}", state);
         switch (state) {
-            case ok:
+            case "ok":
                 return Response.ok(new Reply("okay")).build();
-            case raw:
+            case "raw":
                 return Response.status(FORBIDDEN).build();
-            case fails:
+            case "fails":
                 throw new ApiException();
         }
         throw new UnsupportedOperationException();
