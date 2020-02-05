@@ -17,6 +17,5 @@
 = Running the MicroProfile Problem Detail TCK
 
 //TODO document how to run the TCK
-//TODO caused-by chain for bridged failures
 
 `-Dtestcontainer-running=http://localhost:8080/problem-details-tck`
