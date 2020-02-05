@@ -44,13 +44,6 @@ class MicroprofileRestClientBridgeIT {
     }
 
     @EnumSource(Mode.class)
-    @ParameterizedTest void shouldFailWithUnknownState(Mode mode) {
-        Response response = get("/bridge/indirect/unknown", mode);
-
-        ContainerLaunchingExtension.thenProblemDetail(response).hasStatus(NOT_FOUND).hasType("urn:problem-type:not-found");
-    }
-
-    @EnumSource(Mode.class)
     @ParameterizedTest void shouldMapBridgedOkay(Mode mode) {
         Response response = get("/bridge/indirect/ok", mode);
 
