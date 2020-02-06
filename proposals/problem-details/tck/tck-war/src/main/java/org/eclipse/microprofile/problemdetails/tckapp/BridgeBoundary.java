@@ -20,6 +20,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.util.function.Function;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
@@ -28,32 +29,6 @@ import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 @Path("/bridge")
 public class BridgeBoundary {
     private static final String BASE_URI = "http://localhost:8080/problem-details.tck-war";
-
-    /** how to call the target -- duplicated in MicroprofileRestClientBridgeIT */
-    @SuppressWarnings("unused") public enum Mode {
-        /** JAX-RS WebTarget */
-        webTarget {
-            @Override public API api(BridgeBoundary context) {
-                return context::jaxRsCall;
-            }
-        },
-
-        /** Manually build a Microprofile Rest Client */
-        mpm {
-            @Override public API api(BridgeBoundary context) {
-                return RestClientBuilder.newBuilder().baseUri(URI.create(BASE_URI)).build(API.class);
-            }
-        },
-
-        /** Injected Microprofile Rest Client */
-        mpi {
-            @Override public API api(BridgeBoundary context) {
-                return context.target;
-            }
-        };
-
-        public abstract API api(BridgeBoundary context);
-    }
 
     @Data @NoArgsConstructor @AllArgsConstructor
     public static class Reply {
@@ -74,19 +49,32 @@ public class BridgeBoundary {
     private final Client rest = ClientBuilder.newClient();
 
     @Path("/indirect/{state}")
-    @GET public Reply indirect(@PathParam("state") String state, @NotNull @QueryParam("mode") Mode mode) {
+    @GET public Reply indirect(@PathParam("state") String state, @NotNull @QueryParam("mode") String mode) {
         log.info("call indirect {} :: {}", state, mode);
 
-        API target = mode.api(this);
+        Function<String, Reply> target = by(mode);
 
         try {
-            Reply reply = target.request(state);
+            Reply reply = target.apply(state);
             log.info("indirect call reply {}", reply);
             return reply;
         } catch (RuntimeException e) {
             log.info("indirect call exception", e);
             throw e;
         }
+    }
+
+    private Function<String, Reply> by(String mode) {
+        switch (mode) {
+            case "webTarget": // JAX-RS WebTarget
+                return this::jaxRsCall;
+            case "mpm": // Manually build a Microprofile Rest Client
+                return RestClientBuilder.newBuilder().baseUri(URI.create(BASE_URI))
+                    .build(API.class)::request;
+            case "mpi": // Injected Microprofile Rest Client
+                return target::request;
+        }
+        throw new UnsupportedOperationException("unknown mode " + mode);
     }
 
     private Reply jaxRsCall(String state) {

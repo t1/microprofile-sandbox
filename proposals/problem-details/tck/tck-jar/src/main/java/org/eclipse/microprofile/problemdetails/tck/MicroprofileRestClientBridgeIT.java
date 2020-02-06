@@ -11,12 +11,9 @@ import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
-import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.target;
-import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.thenProblemDetail;
 import static org.eclipse.microprofile.problemdetails.tck.MicroprofileRestClientBridgeIT.Mode.mpi;
 import static org.eclipse.microprofile.problemdetails.tck.MicroprofileRestClientBridgeIT.Mode.mpm;
 import static org.eclipse.microprofile.problemdetails.tck.MicroprofileRestClientBridgeIT.Mode.webTarget;
