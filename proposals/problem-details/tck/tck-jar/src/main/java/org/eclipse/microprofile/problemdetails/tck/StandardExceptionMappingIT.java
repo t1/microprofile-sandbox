@@ -61,7 +61,7 @@ class StandardExceptionMappingIT {
 
     @Test void shouldMapIllegalArgumentExceptionWithoutMessage() {
         testPost("/standard/illegal-argument-without-message")
-            .hasStatus(BAD_REQUEST)
+            .hasStatus(INTERNAL_SERVER_ERROR)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:illegal-argument")
             .hasTitle("Illegal Argument")
@@ -71,7 +71,7 @@ class StandardExceptionMappingIT {
 
     @Test void shouldMapIllegalArgumentExceptionWithMessage() {
         testPost("/standard/illegal-argument-with-message")
-            .hasStatus(BAD_REQUEST)
+            .hasStatus(INTERNAL_SERVER_ERROR)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:illegal-argument")
             .hasTitle("Illegal Argument")
