@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.problemdetails.ResponseStatus;
 import org.eclipse.microprofile.problemdetails.Status;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
@@ -28,8 +29,6 @@ import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 @Slf4j
 @Path("/bridge")
 public class BridgeBoundary {
-    private static final String BASE_URI = "http://localhost:8080/problem-details.tck-war";
-
     @Data @NoArgsConstructor @AllArgsConstructor
     public static class Reply {
         private String value;
@@ -38,11 +37,14 @@ public class BridgeBoundary {
     @Status(ResponseStatus.FORBIDDEN)
     public static class ApiException extends RuntimeException {}
 
-    @RegisterRestClient(baseUri = BASE_URI)
+    @RegisterRestClient
     public interface API {
         @Path("/bridge/target/{state}")
         @GET Reply request(@PathParam("state") String state) throws ApiException;
     }
+
+    @Inject @ConfigProperty(name = "org.eclipse.microprofile.problemdetails.tckapp.BridgeBoundary$API/mp-rest/url")
+    URI baseUri;
 
     @Inject @RestClient API target;
 
@@ -69,7 +71,7 @@ public class BridgeBoundary {
             case "webTarget": // JAX-RS WebTarget
                 return this::jaxRsCall;
             case "mpm": // Manually build a Microprofile Rest Client
-                return RestClientBuilder.newBuilder().baseUri(URI.create(BASE_URI))
+                return RestClientBuilder.newBuilder().baseUri(baseUri)
                     .build(API.class)::request;
             case "mpi": // Injected Microprofile Rest Client
                 return target::request;
@@ -78,7 +80,7 @@ public class BridgeBoundary {
     }
 
     private Reply jaxRsCall(String state) {
-        return rest.target(BASE_URI)
+        return rest.target(baseUri)
             .path("/bridge/target")
             .path(state)
             .request(APPLICATION_JSON_TYPE)
