@@ -38,6 +38,7 @@
     </properties>
 
     <build>
+        <defaultGoal>verify</defaultGoal>
         <plugins>
             <plugin>
                 <groupId>org.asciidoctor</groupId>
@@ -50,6 +51,13 @@
                         <version>1.5.0-rc.3</version>
                     </dependency>
                 </dependencies>
+                <configuration>
+                    <sourceDocumentName>microprofile-problemdetails.asciidoc</sourceDocumentName>
+                    <sourceHighlighter>coderay</sourceHighlighter>
+                    <attributes>
+                        <license>Apache License v2.0</license>
+                    </attributes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>generate-pdf-doc</id>
@@ -59,6 +67,7 @@
                         </goals>
                         <configuration>
                             <backend>pdf</backend>
+                            <outputFile>${project.build.directory}/generated-docs/microprofile-problemdetails-${project.version}.pdf</outputFile>
                             <attributes>
                                 <revnumber>${project.version}</revnumber>
                                 <revremark>${asciidoctor-revision-remark}</revremark>
@@ -74,6 +83,7 @@
                         </goals>
                         <configuration>
                             <backend>html5</backend>
+                            <outputFile>${project.build.directory}/generated-docs/microprofile-problemdetails-${project.version}.html</outputFile>
                             <attributes>
                                 <revnumber>${project.version}</revnumber>
                                 <revremark>${asciidoctor-revision-remark}</revremark>

@@ -34,32 +34,148 @@ ifdef::backend-pdf[]
 :pagenums:
 endif::[]
 
-== Introduction
+include::license-alv2.asciidoc[]
 
-* MUST `application/problem+json`, `application/problem+xml`; SHOULD any, e.g. `+yaml`
-* SHOULD render `text/html`
-* map also `@Valid` REST params
-* logging: 4xx = DEBUG, 5xx = ERROR; configurable?
-* order of extensions is alphabetic (which is better for tests than random)
-* multiple extensions with the same name: undefined behavior
-* JAXB can't unmarshal a subclass with the same type and namespace
+***************************************************************
+*Map standard and custom exceptions to http response bodies containing problem details as specified in https://tools.ietf.org/html/rfc7807[RFC-7807] and/or convert and throw problem details as exceptions.*
+***************************************************************
 
-== Fields
+== MicroProfile Problem Details Examples
 
-=== Type
+=== Server Side
 
-=== Title
+On the server side, you can simply throw an exception. The exception can be a standard or a custom exception:
 
-=== Detail
+[source,java]
+---------------------------------------------------------------
+public class OutOfCreditException extends RuntimeException {}
+---------------------------------------------------------------
 
-=== Status
+This will result in an entity similar to this:
 
-=== Instance
+[source,yaml]
+---------------------------------------------------------------
+{
+  "type": "urn:problem-type:out-of-credit",                   # <1>
+  "title": "Out Of Credit",                                   # <2>
+  "status": 400,                                              # <3>
+  "instance": "urn:uuid:d294b32b-9dda-4292-b51f-35f65b4bf64d" # <4>
+}
+---------------------------------------------------------------
 
-=== Extension
+<1> The default `type` is a URN derived from the type name of the exception by converting camel case to kebap case and stripping the `Exception` (but not `Error`).
+<2> The default `title` is derived from the type name of the exception by converting camel case to separate words.
+<3> The default `status` is `400 Bad Request` for custom exceptions and `500 Internal Server Error` for standard exceptions like `NullPointerException`.
+<4> The default `instance` is a random UUID URN.
 
-== Logging
+==== Content-Type
+
+In the example above, the container signals the `Content-Type` to be `application/problem+json`.
+
+If the client prefers (with an `Accept` header) a content type of `application/xml`, the entity will be the xml equivalent of this document (more details in the https://tools.ietf.org/html/rfc7807#appendix-A[rfc]).
+
+If the client prefers `text/html`, a compliant implementations SHOULD render a problem detail as a html page with all the fields and extensions, but *not* with a stack trace (except when the user has explicitly enabled some kind of development mode).
+
+Implementations CAN honor other requested types, e.g. `application/yaml`, and produce a corresponding `application/problem+yaml`, when they can produce that type of entity.
+
+If no requested type is acceptable, the container MUST produce `application/problem+json`.
+
+==== Logging
+
+The main use of the `instance` field is to have a reference to search for in the logs. So an appropriate log event is produced whenever the problem detail is created. Then you can see all the logs that led to the problem and other details, such as the stack trace. The stack trace is explicitly _never_ part of the body, as it must be considered to be sensitive.
+
+The logging category defaults to the fully qualified class name of the exception. By default, `4xx` status codes are considered a problem of the client and are logged at `INFO` log level; `5xx` status codes are a problem of the service, so they are logged at `ERROR`. As the stack trace is only relevant for server problems, it's only logged at `ERROR` and `WARNING` levels, not at `INFO` or `DEBUG` (see below for how to log at those levels).
+
+http://www.slf4j.org[slf4j] is used for the logging. If this is not provided by your application server, you may also have to package the `slf4j-api` and a binding like `slf4j-jdk14`.
+
+==== Annotations
+
+Each of the defaults above can optionally be overridden with annotations. Additionally, custom problem detail fields (called extensions) can be defined with `@Extension` annotated fields or methods. E.g.:
+
+[source,java]
+---------------------------------------------------------------
+@Type("https://example.com/probs/out-of-credit")
+@Title("You do not have enough credit.")
+@Status(FORBIDDEN)                                           // <1>
+@Logging(at = WARNING, to = "warnings")                      // <2>
+@Getter @AllArgsConstructor @NoArgsConstructor(force = true) // <3>
+public class OutOfCreditException extends RuntimeException {
+    @Instance private URI instance;                          // <4>
+    @Extension private int balance;                          // <5>
+    private int cost;                                        // <6>
+    @Extension private List<URI> accounts;                   // <7>
+
+    @Detail public String getDetail() {                      // <8>
+        return "Your current balance is " + balance + ", but that costs " + cost + ".";
+    }
+}
+---------------------------------------------------------------
+
+<1> The status is a constant from the `ResponseStatus` enum.
+<2> The `@Logging` annotation defines the log level and the category. Can also be on the package (i.e. in the `package-info.java` file) to be a fallback for all exceptions in the package.
+<3> These are https://projectlombok.org[Lombok] annotations, just for demo purposes; feel free to write the boiler plate code by hand ;-)
+<4> The `@Instance` annotation can be on a field or a no-arg method.
+<5> There can be multiple `@Extension` annotations on fields or no-arg methods.
+<6> This field is not annotated, so it won't be part of the body.
+<7> Extensions can also be complex types, i.e. arrays/lists or maps/objects containing multiple fields, as long as they are (de)serializable.
+<8> The `@Detail` annotation can be on a field or a no-arg method.
+
+This will result in an problem detail body like this:
+
+[source,json]
+---------------------------------------------------------------
+{
+  "type": "https://example.com/probs/out-of-credit",
+  "title": "Forbidden",
+  "status": 403,
+  "detail": "Your current balance is 30, but that costs 50.",
+  "instance": "urn:uuid:d294b32b-9dda-4292-b51f-35f65b4bf64d",
+  "balance": 50,
+  "accounts": [
+    "/account/12345",
+    "/account/67890"
+  ]
+}
+---------------------------------------------------------------
+
+The order of extensions is alphabetic (which is better for tests than random). Multiple extensions with the same name cause an undefined behavior.
+
+==== Validations
+
+One of the most common use-cases for Bad Requests is a failing validation. You can do a verification and throw a corresponding problem detail exception simply by throwing a `ValidationException` from Bean Validation or by annotating a parameter to a REST boundary method as `@Valid`.
+
+=== Client Side
+
+On the client side, a type-safe exception is thrown for your code to catch.
+
+[source,java]
+---------------------------------------------------------------
+class OrderGateway {
+    public Shipment order(String articleId) {
+        try {
+            return call(articleId);
+        } catch (OutOfCreditException e) {
+            displayOutOfCredit(e.getBalance());
+            return null;
+        }
+    }
+}
+---------------------------------------------------------------
+
+The container maps the problem detail entity to an exception that would produce that `type` field. If no corresponding exception is found, it throws a standard exception for the status code, e.g. a `ForbiddenException` with the message set to the `detail` field, when available.
+
+==== Logging
+
+// TODO what should we log on the client side?
 
 == Security Considerations
 
-* Security considerations: nothing dangerous in problem details (i.e. exception message); stack-trace in logs
+// TODO Security considerations: nothing dangerous in problem details (i.e. exception message); stack-trace in logs
+
+== Open Questions
+
+=== Opinionated
+
+* There's already an `@Extension` annotation in MP OpenApi. I think it's hardly a problem, as the problem extensions are only applied to exceptions, while the OpenApi extensions are only applied to JAX-RS interfaces.
+
+=== Indifferent

@@ -24,7 +24,7 @@ The proposed standard https://tools.ietf.org/html/rfc7807[RFC-7807] specifies an
 The MicroProfile Problem Detail specification defines that compliant implementations:
 
 * Map exceptions thrown while processing an http request to valid problem detail documents.
-* Use what defaults for the various specified fields.
+* Use defaults for the various specified fields.
 * Consider the annotations defined in the API to override those defaults or add extension fields.
 * Map problem detail http message entities on the client side back to appropriate standard or a (compatible) custom exceptions containing the fields and extensions.
 
