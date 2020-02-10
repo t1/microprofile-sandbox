@@ -41,4 +41,4 @@ Specification::
 A PDF and HTML version of the specification document in `/spec/target/generated-docs/`.
 
 TCK::
-A war and a test artifact to verify an implementation. See the tck/README.asciidoc[readme in the `tck` module] for details on how to build and run the tests.
+A war and a test artifact to verify an implementation. See the https://tck/README.asciidoc[readme in the `tck` module] for details on how to build and run the tests.
