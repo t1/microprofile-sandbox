@@ -14,8 +14,30 @@
 // limitations under the License.
 //
 
-= Running the MicroProfile Problem Detail TCK
+= MicroProfile Problem Details TCK
 
-//TODO document how to run the TCK
+The TCK consists of two artifacts: a `war` with the endpoints to be accessed by a `jar` with the JUnit 5 test cases.
 
-`-Dtestcontainer-running=http://localhost:8080/problem-details-tck`
+To run these tests from your maven build, create a module with `pom` packaging, a dependency on the TCK jar, and the `maven-failsafe-plugin` configured like the following. A working example is https://github.com/t1/problem-details/tree/master/ri-tck[here].
+
+[source,xml]
+---------------------------------------------------------------
+<plugin>
+    ...
+    <configuration>
+        <dependenciesToScan>
+            <dependency>io.microprofile.sandbox:problem-details.tck-jar</dependency>
+        </dependenciesToScan>
+    </configuration>
+</plugin>
+---------------------------------------------------------------
+
+Before executing, the test cases launch a https://github.com/t1/jee-testcontainers[JEE testcontainer], i.e. a Docker container with an application server, and deploy the `war`. By default it starts a WildFly container, but you can configure it with the following system properties. You can set them in a `systemPropertyVariables` element within the `configuration` element.
+
+[options="header",cols="20%,80%"]
+|=======================
+| System Property | Description
+| `jee-testcontainer` | One of `wildfly`, `open-liberty`, `payara`, or `tomee` to select the container to launch. To pick a specific tag, append it like `wildfly:19.0.0.Beta1`.
+| `problemdetails-tck-libs` | A whitespace delimited list of libraries to add to the `war` before deploying. E.g. to add the API jar: `urn:mvn:io.microprofile.sandbox:problem-details-api:${problemdetails.version}:jar`.
+| `problemdetails-tck-running` | The URL of an already deployed TCK `war`, useful while testing. E.g. `http://localhost:8080/problem-details.tck-war`.
+|=======================

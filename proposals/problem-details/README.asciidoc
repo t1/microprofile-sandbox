@@ -19,14 +19,15 @@
 
 = Problem Details
 
-The proposed standard https://tools.ietf.org/html/rfc7807[RFC-7807] specifies an http response message entity (body) to convey the machine- and human-readable details about a problem with a request. When applying this standard to the Java world, exceptions on the server side can be mapped to such a problem details; and/or problem detail responses can trigger an exception on the client side containing the information provided in the message.
+The proposed standard https://tools.ietf.org/html/rfc7807[RFC-7807] specifies an http response message entity (body) to convey the machine- and human-readable details about a problem with a request. When applying this standard to the Java world, exceptions on the server side can be mapped to such a problem details; and/or problem detail responses can trigger an exception on the client side, eventually containing the information provided in the message.
 
 The MicroProfile Problem Detail specification defines that compliant implementations:
 
 * Map exceptions thrown while processing an http request to valid problem detail documents.
 * Use defaults for the various specified fields.
 * Consider the annotations defined in the API to override those defaults or add extension fields.
-* Map problem detail http message entities on the client side back to appropriate standard or a (compatible) custom exceptions containing the fields and extensions.
+* Log the occurrence of such exceptions with all their details.
+* Map problem detail http message entities on the client side back to appropriate standard or a (compatible) custom exception containing the fields and extensions.
 
 
 == Building
@@ -34,10 +35,10 @@ The MicroProfile Problem Detail specification defines that compliant implementat
 Just enter `mvn` at the command line and maven will generate the following artifacts:
 
 API::
-A jar containing the api annotations, etc. in `/api/target`
+A jar containing the api annotations, etc. in `/api/target`.
 
 Specification::
-A PDF and HTML version of the specification document in `/spec/target/generated-docs/`
+A PDF and HTML version of the specification document in `/spec/target/generated-docs/`.
 
 TCK::
-A artifacts to test an implementation in `/tck/target`
+A war and a test artifact to verify an implementation. See the readme in the `tck` module for details on how to build and run the tests.
