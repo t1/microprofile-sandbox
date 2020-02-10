@@ -5,9 +5,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.assertj.core.api.BDDAssertions;
+import org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.ProblemDetailAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.ProblemDetailAssert;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
