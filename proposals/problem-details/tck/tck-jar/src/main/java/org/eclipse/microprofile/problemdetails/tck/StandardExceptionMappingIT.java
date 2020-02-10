@@ -16,6 +16,46 @@ import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExte
 
 @ExtendWith(ContainerLaunchingExtension.class)
 class StandardExceptionMappingIT {
+    @Test void shouldMapNullPointerExceptionWithoutMessage() {
+        testPost("/standard/npe-without-message")
+            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasContentType(PROBLEM_DETAIL_JSON)
+            .hasType("urn:problem-type:null-pointer")
+            .hasTitle("Null Pointer")
+            .hasNoDetail()
+            .hasUuidInstance();
+    }
+
+    @Test void shouldMapNullPointerExceptionWithMessage() {
+        testPost("/standard/npe-with-message")
+            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasContentType(PROBLEM_DETAIL_JSON)
+            .hasType("urn:problem-type:null-pointer")
+            .hasTitle("Null Pointer")
+            .hasNoDetail()
+            .hasUuidInstance();
+    }
+
+    @Test void shouldMapIllegalArgumentExceptionWithoutMessage() {
+        testPost("/standard/illegal-argument-without-message")
+            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasContentType(PROBLEM_DETAIL_JSON)
+            .hasType("urn:problem-type:illegal-argument")
+            .hasTitle("Illegal Argument")
+            .hasNoDetail()
+            .hasUuidInstance();
+    }
+
+    @Test void shouldMapIllegalArgumentExceptionWithMessage() {
+        testPost("/standard/illegal-argument-with-message")
+            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasContentType(PROBLEM_DETAIL_JSON)
+            .hasType("urn:problem-type:illegal-argument")
+            .hasTitle("Illegal Argument")
+            .hasNoDetail()
+            .hasUuidInstance();
+    }
+
     // TODO TomEE doesn't write some problem detail entities https://github.com/t1/problem-details/issues/17
     @DisabledIfSystemProperty(named = "jee-testcontainer", matches = "tomee")
     @Test void shouldMapClientWebApplicationExceptionWithoutEntityOrMessage() {
@@ -24,7 +64,7 @@ class StandardExceptionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:bad-request")
             .hasTitle("Bad Request")
-            .hasDetail(null)
+            .hasNoDetail()
             .hasUuidInstance();
     }
 
@@ -36,7 +76,7 @@ class StandardExceptionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:bad-request")
             .hasTitle("Bad Request")
-            .hasDetail("some message")
+            .hasNoDetail()
             .hasUuidInstance();
     }
 
@@ -55,47 +95,7 @@ class StandardExceptionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:service-unavailable")
             .hasTitle("Service Unavailable")
-            .hasDetail(null)
-            .hasUuidInstance();
-    }
-
-    @Test void shouldMapIllegalArgumentExceptionWithoutMessage() {
-        testPost("/standard/illegal-argument-without-message")
-            .hasStatus(INTERNAL_SERVER_ERROR)
-            .hasContentType(PROBLEM_DETAIL_JSON)
-            .hasType("urn:problem-type:illegal-argument")
-            .hasTitle("Illegal Argument")
-            .hasDetail(null)
-            .hasUuidInstance();
-    }
-
-    @Test void shouldMapIllegalArgumentExceptionWithMessage() {
-        testPost("/standard/illegal-argument-with-message")
-            .hasStatus(INTERNAL_SERVER_ERROR)
-            .hasContentType(PROBLEM_DETAIL_JSON)
-            .hasType("urn:problem-type:illegal-argument")
-            .hasTitle("Illegal Argument")
-            .hasDetail("some message")
-            .hasUuidInstance();
-    }
-
-    @Test void shouldMapNullPointerExceptionWithoutMessage() {
-        testPost("/standard/npe-without-message")
-            .hasStatus(INTERNAL_SERVER_ERROR)
-            .hasContentType(PROBLEM_DETAIL_JSON)
-            .hasType("urn:problem-type:null-pointer")
-            .hasTitle("Null Pointer")
-            .hasDetail(null)
-            .hasUuidInstance();
-    }
-
-    @Test void shouldMapNullPointerExceptionWithMessage() {
-        testPost("/standard/npe-with-message")
-            .hasStatus(INTERNAL_SERVER_ERROR)
-            .hasContentType(PROBLEM_DETAIL_JSON)
-            .hasType("urn:problem-type:null-pointer")
-            .hasTitle("Null Pointer")
-            .hasDetail("some message")
+            .hasNoDetail()
             .hasUuidInstance();
     }
 

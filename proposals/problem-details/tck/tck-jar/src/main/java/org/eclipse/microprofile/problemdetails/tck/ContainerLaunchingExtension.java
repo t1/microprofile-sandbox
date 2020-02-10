@@ -34,17 +34,21 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
         if (System.getProperty("problemdetails-tck-running") != null) {
             BASE_URI = URI.create(System.getProperty("problemdetails-tck-running"));
         } else if (BASE_URI == null) {
-            Mod[] mods = Stream.of(System.getProperty("problemdetails-tck-libs", "")
-                .split("\\s"))
-                .filter(uri -> !uri.isEmpty())
-                .map(AddLibMod::addLib)
-                .toArray(Mod[]::new);
-            JeeContainer container = JeeContainer.create()
-                // TODO get the version, maybe from the manifest
-                .withDeployment("urn:mvn:io.microprofile.sandbox:problem-details.tck-war:1.0.0-SNAPSHOT:war", mods);
+            String[] libs = System.getProperty("problemdetails-tck-libs", "").split("\\s");
+            JeeContainer container = buildJeeContainer(Stream.of(libs));
             container.start();
             BASE_URI = container.baseUri();
         }
+    }
+
+    public static JeeContainer buildJeeContainer(Stream<String> libs) {
+        Mod[] mods = libs
+            .filter(uri -> !uri.isEmpty())
+            .map(AddLibMod::addLib)
+            .toArray(Mod[]::new);
+        return JeeContainer.create()
+            // TODO get the version, maybe from the manifest
+            .withDeployment("urn:mvn:io.microprofile.sandbox:problem-details.tck-war:1.0.0-SNAPSHOT:war", mods);
     }
 
     public static ProblemDetailAssert<ProblemDetail> testPost(String path) {
@@ -128,6 +132,12 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
         public ProblemDetailAssert<T> hasDetail(String detail) {
             assertThat(getDetail()).describedAs("problem-detail.detail")
                 .isEqualTo(detail);
+            return this;
+        }
+
+        public ProblemDetailAssert<T> hasNoDetail() {
+            assertThat(getDetail()).describedAs("problem-detail.detail")
+                .isNull();
             return this;
         }
 

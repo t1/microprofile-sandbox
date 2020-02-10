@@ -11,6 +11,26 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 @Path("/standard")
 public class StandardExceptionBoundary {
+    @Path("/npe-without-message")
+    @POST public void npeWithoutMessage() {
+        throw new NullPointerException();
+    }
+
+    @Path("/npe-with-message")
+    @POST public void npeWithMessage() {
+        throw new NullPointerException("some message");
+    }
+
+    @Path("/illegal-argument-without-message")
+    @POST public void illegalArgumentWithoutMessage() {
+        throw new IllegalArgumentException();
+    }
+
+    @Path("/illegal-argument-with-message")
+    @POST public void illegalArgumentWithMessage() {
+        throw new IllegalArgumentException("some message");
+    }
+
     @Path("/plain-bad-request")
     @POST public void plainBadRequest() {
         throw new BadRequestException();
@@ -30,25 +50,5 @@ public class StandardExceptionBoundary {
     @Path("/plain-service-unavailable")
     @POST public void plainServiceUnavailable() {
         throw new ServiceUnavailableException();
-    }
-
-    @Path("/illegal-argument-without-message")
-    @POST public void illegalArgumentWithoutMessage() {
-        throw new IllegalArgumentException();
-    }
-
-    @Path("/illegal-argument-with-message")
-    @POST public void illegalArgumentWithMessage() {
-        throw new IllegalArgumentException("some message");
-    }
-
-    @Path("/npe-without-message")
-    @POST public void npeWithoutMessage() {
-        throw new NullPointerException();
-    }
-
-    @Path("/npe-with-message")
-    @POST public void npeWithMessage() {
-        throw new NullPointerException("some message");
     }
 }
