@@ -63,9 +63,9 @@ This will result in an entity similar to this:
 }
 ---------------------------------------------------------------
 
-<1> The default `type` is a URN derived from the type name of the exception by converting camel case to kebap case and stripping the `Exception` (but not `Error`).
+<1> The default `type` is a URN derived from the simple type name of the exception by converting camel case to kebap case and stripping the `Exception` (but not `Error`). The package is not included, as the `type` has to be very stable, and moving an exception from one package to another should not affect the `type` field.
 <2> The default `title` is derived from the type name of the exception by converting camel case to separate words.
-<3> The default `status` is `400 Bad Request` for custom exceptions and `500 Internal Server Error` for standard exceptions like `NullPointerException`.
+<3> The default `status` (the field as well as the http status) is `400 Bad Request` for custom exceptions and `500 Internal Server Error` for standard exceptions like `NullPointerException`.
 <4> The default `instance` is a random UUID URN.
 
 There is no `detail` field by default. The exception message would be a candidate, but it can contain sensitive details.
@@ -154,7 +154,7 @@ public class PersonBoundary {
 }
 ---------------------------------------------------------------
 
-The container produces a type `urn:problem-type:validation-failed` problem detail with a map of `violations` containing the violating paths to the violations:
+The container produces a type `urn:problem-type:validation-failed` problem detail with a map of `violations` containing the violating field paths to the violations:
 
 [source,json]
 ---------------------------------------------------------------
@@ -197,7 +197,11 @@ The container maps the problem detail entity to an exception that would produce 
 
 == Security Considerations
 
-// TODO Security considerations: nothing dangerous in problem details (i.e. exception message); stack-trace in logs
+The security considerations from https://tools.ietf.org/html/rfc7807#section-5[the rfc] apply here as well: when you produce problem details, you must scrutinize the information you expose.
+
+The container MUST NOT add any unsolicited details: only the annotated fields and/or the defaults may be exposed; the defaults only expose information from the simple class name and the status code. The `instance` uuid MUST be a fully random uuid, as other uuids may expose network or time setting information. As noticed above, esp. stack-traces MUST NOT go into the responses from a server, but only into the logs.
+
+Deserializing a problem detail, esp. the extension fields, can also provide for a potential attack vector. This is a common scenario containers must handle generally; this is just a reminder.
 
 == Open Questions
 
