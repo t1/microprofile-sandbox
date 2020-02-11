@@ -90,8 +90,6 @@ The logging category defaults to the fully qualified class name of the exception
 
 By default, `4xx` status codes are considered a problem of the client and are logged at `INFO` log level; `5xx` status codes are a problem of the service, so they are logged at `ERROR`. As the stack trace is only relevant for server problems, it's only logged at `ERROR` and `WARNING` levels, not at `INFO` or `DEBUG` (see below for how to log at `WARNING` or `DEBUG` levels).
 
-http://www.slf4j.org[slf4j] is used for the logging. If this is not provided by your container, you may also have to package the `slf4j-api` and a binding like `slf4j-jdk14`.
-
 ==== Annotations
 
 Each of the defaults above can optionally be overridden with annotations. Additionally, custom problem detail fields (called extensions) can be defined with `@Extension` annotated fields or methods. E.g.:
