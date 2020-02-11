@@ -52,7 +52,7 @@
         <dependency>
             <groupId>com.github.t1</groupId>
             <artifactId>jee-testcontainers</artifactId>
-            <version>1.4.0</version>
+            <version>1.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
