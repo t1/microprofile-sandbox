@@ -39,5 +39,6 @@ Before executing, the test cases launch a https://github.com/t1/jee-testcontaine
 | System Property | Description
 | `jee-testcontainer` | One of `wildfly`, `open-liberty`, `payara`, or `tomee` to select the container to launch. To pick a specific tag, append it like `wildfly:19.0.0.Beta1`.
 | `problemdetails-tck-libs` | A whitespace delimited list of libraries to add to the `war` before deploying. E.g. to add the API jar: `urn:mvn:io.microprofile.sandbox:problem-details-api:${problemdetails.version}:jar`.
-| `problemdetails-tck-running` | The URL of an already deployed TCK `war`, useful while testing. E.g. `+http://localhost:8080/problem-details.tck-war+`.
+| `problemdetails-tck-running` | The URL of an already deployed TCK `war`, useful while developing. E.g. `+http://localhost:8080/problem-details.tck-war+`.
+| `problemdetails-tck-testcontainer-reuse` | _EXPERIMENTAL:_ Start the Testcontainer, but reuse it as long as the config doesn't change. Useful while developing. Uses an *_unstable_* https://javadoc.io/static/org.testcontainers/testcontainers/1.12.3/org/testcontainers/containers/GenericContainer.html#withReuse-boolean-[Testcontainers API].
 |=======================

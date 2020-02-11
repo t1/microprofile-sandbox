@@ -35,7 +35,8 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
             BASE_URI = URI.create(System.getProperty("problemdetails-tck-running"));
         } else if (BASE_URI == null) {
             String[] libs = System.getProperty("problemdetails-tck-libs", "").split("\\s");
-            JeeContainer container = buildJeeContainer(Stream.of(libs));
+            JeeContainer container = buildJeeContainer(Stream.of(libs))
+                .withReuse(Boolean.parseBoolean(System.getProperty("problemdetails-tck-testcontainer-reuse", "false")));
             container.start();
             BASE_URI = container.baseUri();
         }

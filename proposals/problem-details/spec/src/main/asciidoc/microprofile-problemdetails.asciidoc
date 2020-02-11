@@ -86,9 +86,11 @@ If no requested type is acceptable, the container MUST produce `application/prob
 
 The main use of the `instance` field is to have a reference to search for in the logs. So an appropriate log event is produced whenever the problem detail is created. Then you can see all the logs that led to the problem and other details, such as the stack trace. The stack trace is explicitly _never_ part of the entity, as it must be considered to be sensitive.
 
-The logging category defaults to the fully qualified class name of the exception. By default, `4xx` status codes are considered a problem of the client and are logged at `INFO` log level; `5xx` status codes are a problem of the service, so they are logged at `ERROR`. As the stack trace is only relevant for server problems, it's only logged at `ERROR` and `WARNING` levels, not at `INFO` or `DEBUG` (see below for how to log at those levels).
+The logging category defaults to the fully qualified class name of the exception.
 
-http://www.slf4j.org[slf4j] is used for the logging. If this is not provided by your application server, you may also have to package the `slf4j-api` and a binding like `slf4j-jdk14`.
+By default, `4xx` status codes are considered a problem of the client and are logged at `INFO` log level; `5xx` status codes are a problem of the service, so they are logged at `ERROR`. As the stack trace is only relevant for server problems, it's only logged at `ERROR` and `WARNING` levels, not at `INFO` or `DEBUG` (see below for how to log at `WARNING` or `DEBUG` levels).
+
+http://www.slf4j.org[slf4j] is used for the logging. If this is not provided by your container, you may also have to package the `slf4j-api` and a binding like `slf4j-jdk14`.
 
 ==== Annotations
 
@@ -207,6 +209,9 @@ Deserializing a problem detail, esp. the extension fields, can also provide for 
 
 === Opinionated
 
-* There's already an `@Extension` annotation in MP OpenApi. I think it's hardly a problem, as the problem extensions are only applied to exceptions, while the OpenApi extensions are only applied to JAX-RS interfaces.
+* There's already an `@Extension` annotation in MP OpenApi. I think it's rarely a problem, as the problem extensions are only applied to exceptions, while the OpenApi extensions are only applied to JAX-RS interfaces.
 
 === Indifferent
+
+* Do we need an option to set the exception message as the default `detail`? OTOH it might contain sensitive data, but it is often very helpful.
+* Do we need an annotation parameter `@Logging(withStackTrace = ON)` or `OFF` or default `AUTO`.
