@@ -12,7 +12,9 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_XML;
+import static org.eclipse.microprofile.problemdetails.LogLevel.ERROR;
 import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.testPost;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.thenLogged;
 
 @ExtendWith(ContainerLaunchingExtension.class)
 class StandardExceptionMappingIT {
@@ -54,6 +56,17 @@ class StandardExceptionMappingIT {
             .hasTitle("Illegal Argument")
             .hasNoDetail()
             .hasUuidInstance();
+    }
+
+    @Test void shouldLogIllegalArgumentExceptionWithMessage() {
+        testPost("/standard/illegal-argument-with-message");
+        thenLogged(ERROR, IllegalArgumentException.class.getName())
+            .type("urn:problem-type:illegal-argument\n")
+            .title("Illegal Argument\n")
+            .status("500\n")
+            .instance("urn:uuid:") // random uuid
+            .stackTrace("java.lang.IllegalArgumentException: some message")
+            .check();
     }
 
     // TODO TomEE doesn't write some problem detail entities https://github.com/t1/problem-details/issues/17

@@ -3,14 +3,22 @@ package org.eclipse.microprofile.problemdetails.tckapp;
 import org.eclipse.microprofile.problemdetails.Detail;
 import org.eclipse.microprofile.problemdetails.Extension;
 import org.eclipse.microprofile.problemdetails.Instance;
+import org.eclipse.microprofile.problemdetails.LogLevel;
+import org.eclipse.microprofile.problemdetails.Logging;
 import org.eclipse.microprofile.problemdetails.Status;
 import org.eclipse.microprofile.problemdetails.Title;
 import org.eclipse.microprofile.problemdetails.Type;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import java.net.URI;
 
+import static org.eclipse.microprofile.problemdetails.LogLevel.DEBUG;
+import static org.eclipse.microprofile.problemdetails.LogLevel.ERROR;
+import static org.eclipse.microprofile.problemdetails.LogLevel.INFO;
+import static org.eclipse.microprofile.problemdetails.LogLevel.OFF;
+import static org.eclipse.microprofile.problemdetails.LogLevel.WARN;
 import static org.eclipse.microprofile.problemdetails.ResponseStatus.FORBIDDEN;
 
 @Path("/custom")
@@ -128,10 +136,18 @@ public class CustomExceptionBoundary {
         throw new SomeMessageException();
     }
 
-    @Path("/explicit-uri-instance")
-    @POST public void customInstanceException() {
+    @Path("/explicit-instance-method")
+    @POST public void customInstanceMethod() {
         class SomeException extends RuntimeException {
             @Instance URI instance() { return URI.create("foobar"); }
+        }
+        throw new SomeException();
+    }
+
+    @Path("/explicit-instance-field")
+    @POST public void customInstanceField() {
+        class SomeException extends RuntimeException {
+            @Instance URI instance = URI.create("foobar");
         }
         throw new SomeException();
     }
@@ -179,5 +195,30 @@ public class CustomExceptionBoundary {
             @Extension("f2") String field = "field 2";
         }
         throw new SomeMessageException();
+    }
+
+
+    @Path("/log-level/{logLevel}")
+    @POST public void customLogLevel(@PathParam("logLevel") LogLevel logLevel) {
+        @Logging(at = ERROR) class ErrorLogException extends RuntimeException {}
+        @Logging(at = WARN) class WarnLogException extends RuntimeException {}
+        @Logging(at = INFO) class InfoLogException extends RuntimeException {}
+        @Logging(at = DEBUG) class DebugLogException extends RuntimeException {}
+        @Logging(at = OFF) class OffLogException extends RuntimeException {}
+
+        switch (logLevel) {
+            case AUTO:
+                throw new IllegalArgumentException();
+            case ERROR:
+                throw new ErrorLogException();
+            case WARN:
+                throw new WarnLogException();
+            case INFO:
+                throw new InfoLogException();
+            case DEBUG:
+                throw new DebugLogException();
+            case OFF:
+                throw new OffLogException();
+        }
     }
 }

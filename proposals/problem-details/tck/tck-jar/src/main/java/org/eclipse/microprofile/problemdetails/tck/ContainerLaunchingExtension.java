@@ -3,11 +3,19 @@ package org.eclipse.microprofile.problemdetails.tck;
 import com.github.t1.testcontainers.jee.AddLibMod;
 import com.github.t1.testcontainers.jee.JeeContainer;
 import com.github.t1.testcontainers.jee.Mod;
+import lombok.Builder;
+import lombok.Singular;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Condition;
+import org.eclipse.microprofile.problemdetails.LogLevel;
+import org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.LoggedAssert.LoggedAssertBuilder;
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.Extension;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.testcontainers.containers.output.OutputFrame;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -16,30 +24,42 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.net.URI;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
-class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
-    private static URI BASE_URI = null;
+public class ContainerLaunchingExtension implements Extension, BeforeAllCallback, BeforeEachCallback, AfterEachCallback {
+    protected static URI BASE_URI = null;
+
+    private static StringBuffer LOGS = null;
+    private static LoggedAssertBuilder LOGGED_ASSERT_BUILDER = null;
 
     /**
      * Stopping is done by the ryuk container... see
      * https://www.testcontainers.org/test_framework_integration/manual_lifecycle_control/#singleton-containers
      */
     @Override public void beforeAll(ExtensionContext context) {
-        if (System.getProperty("problemdetails-tck-running") != null) {
-            BASE_URI = URI.create(System.getProperty("problemdetails-tck-running"));
+        if (System.getProperty(runningProperty()) != null) {
+            BASE_URI = URI.create(System.getProperty(runningProperty()));
         } else if (BASE_URI == null) {
-            String[] libs = System.getProperty("problemdetails-tck-libs", "").split("\\s");
-            JeeContainer container = buildJeeContainer(Stream.of(libs))
-                .withReuse(Boolean.parseBoolean(System.getProperty("problemdetails-tck-testcontainer-reuse", "false")));
+            JeeContainer container = buildJeeContainer()
+                .withLogConsumer(ContainerLaunchingExtension::consumeLog);
             container.start();
             BASE_URI = container.baseUri();
         }
+    }
+
+    protected String runningProperty() { return "problemdetails-tck-running"; }
+
+    protected JeeContainer buildJeeContainer() {
+        String[] libs = System.getProperty("problemdetails-tck-libs", "").split("\\s");
+        return buildJeeContainer(Stream.of(libs));
     }
 
     public static JeeContainer buildJeeContainer(Stream<String> libs) {
@@ -51,6 +71,25 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
             // TODO get the version, maybe from the manifest
             .withDeployment("urn:mvn:io.microprofile.sandbox:problem-details.tck-war:1.0.0-SNAPSHOT:war", mods);
     }
+
+    protected static void consumeLog(OutputFrame outputFrame) {
+        if (LOGS == null) {
+            LOGS = new StringBuffer();
+        }
+        LOGS.append(outputFrame.getUtf8String());
+    }
+
+    @Override public void beforeEach(ExtensionContext context) {
+        LOGS = null;
+    }
+
+    @Override public void afterEach(ExtensionContext context) {
+        if (LOGGED_ASSERT_BUILDER != null) {
+            LOGGED_ASSERT_BUILDER = null;
+            throw new IllegalStateException("LoggedAssertBuilder no check()");
+        }
+    }
+
 
     public static ProblemDetailAssert<ProblemDetail> testPost(String path) {
         return thenProblemDetail(target(path).request(APPLICATION_JSON_TYPE).post(null));
@@ -146,6 +185,12 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
             return entity.getDetail();
         }
 
+        public ProblemDetailAssert<T> hasInstance(String instance) {
+            assertThat(entity.getInstance()).describedAs("problem-detail.instance")
+                .isEqualTo(URI.create(instance));
+            return this;
+        }
+
         public ProblemDetailAssert<T> hasUuidInstance() {
             assertThat(entity.getInstance()).describedAs("problem-detail.instance")
                 .has(new Condition<>(instance -> instance.toString().startsWith("urn:uuid:"), "some uuid urn"));
@@ -190,5 +235,83 @@ class ContainerLaunchingExtension implements Extension, BeforeAllCallback {
             assertThat(this.entity).isEqualTo(entity);
             return this;
         }
+    }
+
+
+    @SneakyThrows(InterruptedException.class)
+    public static void thenNothingLoggedTo(String logCategory) {
+        Thread.sleep(50); // this is not nice
+        if (LOGS != null) {
+            then(LOGS).doesNotContain(logCategory);
+        }
+    }
+
+    public static LoggedAssertBuilder thenLogged(LogLevel logLevel, String logCategory) {
+        if (LOGGED_ASSERT_BUILDER != null)
+            throw new IllegalStateException("thenLogged no check()");
+        LOGGED_ASSERT_BUILDER = LoggedAssert.builder().logLevel(logLevel).logCategory(logCategory);
+        return LOGGED_ASSERT_BUILDER;
+    }
+
+    @Builder
+    public static class LoggedAssert {
+        private final LogLevel logLevel;
+        private final String logCategory;
+        private final String type;
+        private final String title;
+        private final String status;
+        private final String detail;
+        private final String instance;
+        private final @Singular List<String> extensions;
+        private final String stackTrace;
+
+        public static class LoggedAssertBuilder {
+            public void check() {
+                if (LOGGED_ASSERT_BUILDER != this)
+                    throw new IllegalStateException("LoggedAssertBuilder not this");
+                LOGGED_ASSERT_BUILDER = null;
+                build().check();
+            }
+        }
+
+        public void check() {
+            thenLogsContain(logLevel.toString());
+            thenLogsContain(logCategory);
+            thenLogsContainIfNotNull(type);
+            thenLogsContainIfNotNull(title);
+            thenLogsContainIfNotNull(status);
+            thenLogsContainIfNotNull(detail);
+            thenLogsContainIfNotNull(instance);
+            for (String extension : extensions) {
+                thenLogsContainIfNotNull(extension);
+            }
+            thenLogsContainIfNotNull(stackTrace);
+        }
+    }
+
+    private static void thenLogsContainIfNotNull(String field) {
+        if (field != null) {
+            thenLogsContain(field);
+        }
+    }
+
+    @SneakyThrows(InterruptedException.class)
+    private static void thenLogsContain(String value) {
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() < start + 1000) {
+            if (LOGS != null && LOGS.toString().contains(value)) {
+                return;
+            }
+            Thread.sleep(10);
+        }
+        if (!value.endsWith("\n")) {
+            value += "\n";
+        }
+        fail("\n" +
+            "---------------------- logs\n" +
+            LOGS +
+            "---------------------- should contain\n" +
+            value +
+            "---------------------- but didn't within 1 second");
     }
 }

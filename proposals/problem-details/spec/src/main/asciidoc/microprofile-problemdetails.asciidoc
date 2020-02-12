@@ -88,7 +88,7 @@ The main use of the `instance` field is to have a reference to search for in the
 
 The logging category defaults to the fully qualified class name of the exception.
 
-By default, `4xx` status codes are considered a problem of the client and are logged at `INFO` log level; `5xx` status codes are a problem of the service, so they are logged at `ERROR`. As the stack trace is only relevant for server problems, it's only logged at `ERROR` and `WARNING` levels, not at `INFO` or `DEBUG` (see below for how to log at `WARNING` or `DEBUG` levels).
+By default, `4xx` status codes are considered a problem of the client and are logged at `INFO` log level; `5xx` status codes are a problem of the service, so they are logged at `ERROR`. As the stack trace is only relevant for server problems, it's only logged at `ERROR` and `WARN` levels, not at `INFO` or `DEBUG` (see below for how to log at `WARN` or `DEBUG` levels).
 
 ==== Annotations
 
@@ -99,7 +99,7 @@ Each of the defaults above can optionally be overridden with annotations. Additi
 @Type("https://example.com/probs/out-of-credit")
 @Title("You do not have enough credit.")
 @Status(FORBIDDEN)                                           // <1>
-@Logging(at = WARNING, to = "warnings")                      // <2>
+@Logging(at = WARN, to = "warnings")                         // <2>
 public class OutOfCreditException extends RuntimeException {
     @Instance private URI instance;                          // <3>
     @Extension private int balance;                          // <4>
@@ -107,7 +107,7 @@ public class OutOfCreditException extends RuntimeException {
     @Extension private List<URI> accounts;                   // <6>
 
     @Detail public String getDetail() {                      // <7>
-        return "Your current balance is " + balance + ", but that costs " + cost + ".";
+        return "Your current balance is " + balance + ", but that costs " + cost;
     }
 }
 ---------------------------------------------------------------
@@ -118,7 +118,7 @@ public class OutOfCreditException extends RuntimeException {
 <4> There can be multiple `@Extension` annotations on fields or no-arg methods.
 <5> This field is not annotated, so it won't be part of the entity.
 <6> Extensions can also be complex types, i.e. arrays/lists or maps/objects containing multiple fields, as long as they are (de)serializable.
-<7> The `@Detail` annotation can be on a field or a no-arg method.
+<7> The `@Detail` annotation can be on a field or a no-arg method. Multiple details are concatenated with a space.
 
 This produces a problem detail entity like this:
 

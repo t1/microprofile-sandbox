@@ -1,12 +1,20 @@
 package org.eclipse.microprofile.problemdetails.tck;
 
+import org.eclipse.microprofile.problemdetails.LogLevel;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
+import static org.eclipse.microprofile.problemdetails.LogLevel.INFO;
+import static org.eclipse.microprofile.problemdetails.LogLevel.OFF;
 import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.testPost;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.thenLogged;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.thenNothingLoggedTo;
+import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 
 @ExtendWith(ContainerLaunchingExtension.class)
 class CustomExceptionIT {
@@ -140,5 +148,54 @@ class CustomExceptionIT {
             .hasTitle("Some Message")
             .hasDetail("could not invoke SomeMessageException.detail: expected no args but got 1")
             .hasUuidInstance();
+    }
+
+    @Test void shouldMapInstanceMethod() {
+        testPost("/custom/explicit-instance-method")
+            .hasStatus(BAD_REQUEST)
+            .hasContentType(PROBLEM_DETAIL_JSON)
+            .hasType("urn:problem-type:some")
+            .hasTitle("Some")
+            .hasNoDetail()
+            .hasInstance("foobar");
+    }
+
+    @Test void shouldMapInstanceField() {
+        testPost("/custom/explicit-instance-field")
+            .hasStatus(BAD_REQUEST)
+            .hasContentType(PROBLEM_DETAIL_JSON)
+            .hasType("urn:problem-type:some")
+            .hasTitle("Some")
+            .hasNoDetail()
+            .hasInstance("foobar");
+    }
+
+    @Test void shouldLogInstanceField() {
+        testPost("/custom/explicit-instance-field");
+        thenLogged(INFO, "org.eclipse.microprofile.problemdetails.tckapp.CustomExceptionBoundary$4SomeException")
+            .type("urn:problem-type:some")
+            .title("Some")
+            .status("400")
+            .instance("foobar\n" +
+                "\n") // lame indicator that there's no stack trace
+            .check();
+    }
+
+    @EnumSource(value = LogLevel.class, mode = EXCLUDE, names = {
+        "AUTO",
+        "DEBUG" // might be disabled or not
+    })
+    @ParameterizedTest void shouldLogLevel(LogLevel logLevel) {
+        testPost("/custom/log-level/" + logLevel.name());
+        String camel = logLevel.name().substring(0, 1) + logLevel.name().substring(1).toLowerCase();
+        String logCategory = "org.eclipse.microprofile.problemdetails.tckapp.CustomExceptionBoundary$1" + camel + "LogException";
+        if (logLevel == OFF)
+            thenNothingLoggedTo(logCategory);
+        else
+            thenLogged(logLevel, logCategory)
+                .type("urn:problem-type:" + logLevel.name().toLowerCase() + "-log")
+                .title(camel + " Log")
+                .status("400")
+                .check();
     }
 }
