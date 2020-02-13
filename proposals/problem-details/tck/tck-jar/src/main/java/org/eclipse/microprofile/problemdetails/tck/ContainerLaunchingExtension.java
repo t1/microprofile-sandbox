@@ -267,15 +267,25 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
 
         public static class LoggedAssertBuilder {
             public void check() {
-                if (LOGGED_ASSERT_BUILDER != this)
+                if (LOGGED_ASSERT_BUILDER != this) {
                     throw new IllegalStateException("LoggedAssertBuilder not this");
+                }
                 LOGGED_ASSERT_BUILDER = null;
                 build().check();
+            }
+
+            public LoggedAssertBuilder noStackTrace() {
+                stackTrace = null;
+                return this;
             }
         }
 
         public void check() {
-            thenLogsContain(logLevel.toString());
+            String logLevel = this.logLevel.toString();
+            if (isOpenLiberty() && "ERROR".equals(logLevel)) {
+                logLevel = "SEVERE";
+            }
+            thenLogsContain(logLevel);
             thenLogsContain(logCategory);
             thenLogsContainIfNotNull(type);
             thenLogsContainIfNotNull(title);
@@ -289,8 +299,15 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
         }
     }
 
+    private static boolean isOpenLiberty() {
+        return System.getProperty("jee-testcontainer", "").matches("open-liberty.*");
+    }
+
     private static void thenLogsContainIfNotNull(String field) {
         if (field != null) {
+            if (isOpenLiberty()) {
+                field = field.replace("/", "\\/"); // jee-testcontainer open-liberty logs as json
+            }
             thenLogsContain(field);
         }
     }

@@ -176,8 +176,8 @@ class CustomExceptionIT {
             .type("urn:problem-type:some")
             .title("Some")
             .status("400")
-            .instance("foobar\n" +
-                "\n") // lame indicator that there's no stack trace
+            .instance("foobar")
+            .noStackTrace()
             .check();
     }
 
@@ -196,6 +196,7 @@ class CustomExceptionIT {
                 .type("urn:problem-type:" + logLevel.name().toLowerCase() + "-log")
                 .title(camel + " Log")
                 .status("400")
+                .noStackTrace()
                 .check();
     }
 }

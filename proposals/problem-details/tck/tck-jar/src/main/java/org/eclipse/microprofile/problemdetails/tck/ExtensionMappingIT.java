@@ -78,15 +78,15 @@ class ExtensionMappingIT {
     @Test void shouldLogMultiplePackagePrivateExtensions() {
         testPost("/custom/multi-extension", ProblemDetailWithMultipleExtensions.class);
         thenLogged(INFO, "org.eclipse.microprofile.problemdetails.tckapp.CustomExceptionBoundary$11SomeMessageException")
-            .type("urn:problem-type:some-message\n")
-            .title("Some Message\n")
-            .status("400\n")
+            .type("urn:problem-type:some-message")
+            .title("Some Message")
+            .status("400")
             .instance("urn:uuid:") // random uuid
             .extension("f1: field 1")
             .extension("f2: field 2")
             .extension("m1: method 1")
-            .extension("m2: method 2\n" +
-                "\n") // lame indicator that there's no stack trace
+            .extension("m2: method 2")
+            .noStackTrace()
             .check();
     }
 

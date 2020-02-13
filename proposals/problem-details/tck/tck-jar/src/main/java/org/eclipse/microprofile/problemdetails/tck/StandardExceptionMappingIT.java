@@ -61,9 +61,9 @@ class StandardExceptionMappingIT {
     @Test void shouldLogIllegalArgumentExceptionWithMessage() {
         testPost("/standard/illegal-argument-with-message");
         thenLogged(ERROR, IllegalArgumentException.class.getName())
-            .type("urn:problem-type:illegal-argument\n")
-            .title("Illegal Argument\n")
-            .status("500\n")
+            .type("urn:problem-type:illegal-argument")
+            .title("Illegal Argument")
+            .status("500")
             .instance("urn:uuid:") // random uuid
             .stackTrace("java.lang.IllegalArgumentException: some message")
             .check();
