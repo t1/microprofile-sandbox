@@ -213,3 +213,5 @@ Deserializing a problem detail, esp. the extension fields, can also provide for 
 
 * Do we need an option to set the exception message as the default `detail`? OTOH it might contain sensitive data, but it is often very helpful.
 * Do we need an annotation parameter `@Logging(withStackTrace = ON)` or `OFF` or default `AUTO`.
+* How do we distinguish custom from standard exceptions, so the default status is 400 vs. 500? Current approach: packages that start with `java.` or `javax.` are 'standard'; everything else is custom.
+* How do we handle problems that origin from a remote call? Should we wrap them in a 502 Bad Gateway?
