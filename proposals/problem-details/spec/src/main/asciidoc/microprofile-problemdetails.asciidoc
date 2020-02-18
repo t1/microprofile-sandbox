@@ -118,7 +118,7 @@ public class OutOfCreditException extends RuntimeException {
 <4> This field is not annotated, so it won't be part of the entity.
 <5> There can be multiple `@Extension` annotations on fields or no-arg methods. Their names will be used as the keys. The behavior for multiple extensions with the same name is undefined.
 <6> The values can be arbitrarily complex, i.e. also nested arrays, lists, maps, or objects, as long as they are (de)serializable by the underlying (de)serializer, e.g. JSON-B.
-<7> The `@Detail` annotation can be on a field or a no-arg method. Multiple non-null details are concatenated with a space.
+<7> The `@Detail` annotation can be on a field or a no-arg method. Multiple non-null details are concatenated with a space in the order of their field/method name.
 
 // TODO describe the error handling when the invocation of a method fails
 
