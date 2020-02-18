@@ -152,6 +152,40 @@ public class CustomExceptionBoundary {
         throw new SomeException();
     }
 
+    @Path("/null-instance-method")
+    @POST public void nullInstanceMethod() {
+        class SomeException extends RuntimeException {
+            @Instance URI instance() { return null; }
+        }
+        throw new SomeException();
+    }
+
+    @Path("/null-instance-field")
+    @POST public void nullInstanceField() {
+        class SomeException extends RuntimeException {
+            @Instance URI instance = null;
+        }
+        throw new SomeException();
+    }
+
+    @Path("/two-instance-fields-one-null")
+    @POST public void twoInstanceFieldsOneNull() {
+        class SomeException extends RuntimeException {
+            @Instance URI instance1 = null;
+            @Instance URI instance2 = URI.create("foobar");
+        }
+        throw new SomeException();
+    }
+
+    @Path("/two-instance-methods-one-null")
+    @POST public void twoInstanceMethodsOneNull() {
+        class SomeException extends RuntimeException {
+            @Instance URI instance1() { return null; }
+            @Instance URI instance2() { return URI.create("foobar"); }
+        }
+        throw new SomeException();
+    }
+
     @Path("/extension-method")
     @POST public void customExtensionMethod() {
         class SomeException extends RuntimeException {

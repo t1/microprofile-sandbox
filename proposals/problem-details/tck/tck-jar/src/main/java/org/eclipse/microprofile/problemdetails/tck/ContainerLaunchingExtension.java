@@ -112,10 +112,6 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
         return new ResponseAssert<>(response, type);
     }
 
-    public static Response post(String path) {
-        return target(path).request(APPLICATION_JSON_TYPE).post(null);
-    }
-
     public static WebTarget target(String path) {
         WebTarget target = target().path(path);
         log.info("target: {}", target.getUri());
@@ -185,15 +181,23 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
             return entity.getDetail();
         }
 
+        public ProblemDetailAssert<T> hasUuidInstance() {
+            assertThat(entity.getInstance()).describedAs("problem-detail.instance")
+                .has(new Condition<>(instance -> instance.toString().startsWith("urn:uuid:"), "some uuid urn"));
+            return this;
+        }
+
+        @SuppressWarnings("UnusedReturnValue")
         public ProblemDetailAssert<T> hasInstance(String instance) {
             assertThat(entity.getInstance()).describedAs("problem-detail.instance")
                 .isEqualTo(URI.create(instance));
             return this;
         }
 
-        public ProblemDetailAssert<T> hasUuidInstance() {
+        @SuppressWarnings("UnusedReturnValue")
+        public ProblemDetailAssert<T> hasNoInstance() {
             assertThat(entity.getInstance()).describedAs("problem-detail.instance")
-                .has(new Condition<>(instance -> instance.toString().startsWith("urn:uuid:"), "some uuid urn"));
+                .isNull();
             return this;
         }
 

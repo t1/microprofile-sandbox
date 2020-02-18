@@ -36,11 +36,11 @@ endif::[]
 
 include::license-alv2.asciidoc[]
 
-***************************************************************
-*Map standard and custom exceptions to http response bodies containing problem details as specified in https://tools.ietf.org/html/rfc7807[RFC-7807] and/or convert and throw problem details as exceptions on the client side.*
-***************************************************************
+== Introduction
 
-== MicroProfile Problem Details Examples
+MicroProfile Problem Details defines a standard to map existing or custom exceptions to http response bodies containing problem details as specified in https://tools.ietf.org/html/rfc7807[RFC-7807] on the server side and/or convert and throw such problem detail bodies as exceptions on the client side.
+
+== Authoritative Examples
 
 === Server Side
 
@@ -65,7 +65,7 @@ This will result in an entity similar to this:
 
 <1> The default `type` is a URN derived from the simple type name of the exception by converting camel case to kebap case and stripping the `Exception` (but not `Error`). The package is not included, as the `type` has to be very stable, and moving an exception from one package to another should not affect the `type` field.
 <2> The default `title` is derived from the type name of the exception by converting camel case to separate words.
-<3> The default `status` (the field as well as the http status) is `400 Bad Request` for custom exceptions and `500 Internal Server Error` for standard exceptions like `NullPointerException`.
+<3> The default `status` (the field as well as the http status) is `400 Bad Request` for custom exceptions and `500 Internal Server Error` for standard exceptions like `NullPointerException`. Exceptions with an _obvious_ status code MUST be mapped to that code, e.g. the `javax.ws.rs.NotFoundException` to 404.
 <4> The default `instance` is a random UUID URN.
 
 There is no `detail` field by default. The exception message would be a candidate, but it can contain sensitive details.
@@ -92,7 +92,7 @@ By default, `4xx` status codes are considered a problem of the client and are lo
 
 ==== Annotations
 
-Each of the defaults above can optionally be overridden with annotations. Additionally, custom problem detail fields (called extensions) can be defined with `@Extension` annotated fields or methods. E.g.:
+Each of the defaults above can optionally be overridden with corresponding annotations. Additionally, custom problem detail fields (called extensions) can be defined with `@Extension` annotated fields or methods. E.g.:
 
 [source,java]
 ---------------------------------------------------------------
@@ -102,8 +102,8 @@ Each of the defaults above can optionally be overridden with annotations. Additi
 @Logging(at = WARN, to = "warnings")                         // <2>
 public class OutOfCreditException extends RuntimeException {
     @Instance private URI instance;                          // <3>
-    @Extension private int balance;                          // <4>
-    private int cost;                                        // <5>
+    private int cost;                                        // <4>
+    @Extension private int balance;                          // <5>
     @Extension private List<URI> accounts;                   // <6>
 
     @Detail public String getDetail() {                      // <7>
@@ -112,13 +112,15 @@ public class OutOfCreditException extends RuntimeException {
 }
 ---------------------------------------------------------------
 
-<1> The status is a constant from the `ResponseStatus` enum.
-<2> The `@Logging` annotation defines the log level and the category. Can also be on the package (i.e. in the `package-info.java` file) to be a fallback for all exceptions in the package.
-<3> The `@Instance` annotation can be on a field or a no-arg method.
-<4> There can be multiple `@Extension` annotations on fields or no-arg methods.
-<5> This field is not annotated, so it won't be part of the entity.
-<6> Extensions can also be complex types, i.e. arrays/lists or maps/objects containing multiple fields, as long as they are (de)serializable.
-<7> The `@Detail` annotation can be on a field or a no-arg method. Multiple details are concatenated with a space.
+<1> The status is a constant from the `ResponseStatus` enum. Other status codes are not appropriate for custom exceptions as they may have unexpected side effects on caching proxies, etc. In the rare case that you still need them, you can use standard exceptions like `javax.ws.rs.WebApplicationException`.
+<2> The `@Logging` annotation defines the log level and the category. You can also annotate a package (i.e. in the `package-info.java` file) to be a default for all exceptions in the package.
+<3> The `@Instance` annotation can be on a field or a no-arg method. A `null` value removes the entire field. The behavior of multiple fields and/or methods annotated as `@Instance` with a non-null value is undefined.
+<4> This field is not annotated, so it won't be part of the entity.
+<5> There can be multiple `@Extension` annotations on fields or no-arg methods. Their names will be used as the keys. The behavior for multiple extensions with the same name is undefined.
+<6> The values can be arbitrarily complex, i.e. also nested arrays, lists, maps, or objects, as long as they are (de)serializable by the underlying (de)serializer, e.g. JSON-B.
+<7> The `@Detail` annotation can be on a field or a no-arg method. Multiple non-null details are concatenated with a space.
+
+// TODO describe the error handling when the invocation of a method fails
 
 This produces a problem detail entity like this:
 
@@ -138,7 +140,7 @@ This produces a problem detail entity like this:
 }
 ---------------------------------------------------------------
 
-Extensions come after the standard fields. The order of extensions is alphabetic (which is better for tests than random). The behavior for multiple extensions with the same name is undefined.
+Extensions come after the standard fields. The order of extensions is alphabetic (which is better for tests than random).
 
 ==== Validations
 
@@ -199,19 +201,16 @@ The container maps the problem detail entity to an exception that would produce 
 
 The security considerations from https://tools.ietf.org/html/rfc7807#section-5[the rfc] apply here as well: when you produce problem details, you must scrutinize the information you expose.
 
-The container MUST NOT add any unsolicited details: only the annotated fields and/or the defaults may be exposed; the defaults only expose information from the simple class name and the status code. The `instance` uuid MUST be a fully random uuid, as other uuids may expose network or time setting information. As noticed above, esp. stack-traces MUST NOT go into the responses from a server, but only into the logs.
+The container MUST NOT add any unsolicited details: only the annotated fields and/or the defaults may be exposed; the defaults only expose information from the simple class name and the status code. The `instance` uuid MUST be a fully random uuid, as other uuids may expose network or time setting information. As noted above, esp. stack-traces MUST NOT go into the responses from a server, but only into the logs.
 
-Deserializing a problem detail, esp. the extension fields, can also provide for a potential attack vector. This is a common scenario containers must handle generally; this is just a reminder.
+De/serializing a problem detail, esp. the extension fields, can also open a potential attack vector. This is a common scenario containers must handle generally; this is just a reminder.
 
 == Open Questions
 
-=== Opinionated
-
-* There's already an `@Extension` annotation in MP OpenApi. I think it's rarely a problem, as the problem extensions are only applied to exceptions, while the OpenApi extensions are only applied to JAX-RS interfaces.
-
-=== Indifferent
-
-* Do we need an option to set the exception message as the default `detail`? OTOH it might contain sensitive data, but it is often very helpful.
-* Do we need an annotation parameter `@Logging(withStackTrace = ON)` or `OFF` or default `AUTO`.
-* How do we distinguish custom from standard exceptions, so the default status is 400 vs. 500? Current approach: packages that start with `java.` or `javax.` are 'standard'; everything else is custom.
-* How do we handle problems that origin from a remote call? Should we wrap them in a 502 Bad Gateway?
+1. There's already an `@Extension` annotation in MP OpenApi. I think it's rarely a problem, as the problem extensions are only applied to exceptions, while the OpenApi extensions are only applied to JAX-RS interfaces.
+2. The exception message would regularly make for a very good default `detail`. But it might contain sensitive data that might get exposed when an existing system adds Problem Details. Should we still use them and offer an option to disable it when migrating an existing code base? They already often get exposed in the stack traces generated by the application containers.
+3. Do we need an annotation parameter `@Logging(withStackTrace = ON)` or `OFF` or default `AUTO`.
+4. How do we distinguish custom from standard exceptions, so the default status is 400 vs. 500? Almost all custom exceptions will be in the 4xx range and 400 is a very good default. OTOH standard exceptions like NPE are a problem in the service and should be mapped to a 500. Current approach: packages that start with `java.` or `javax.` or `jakarta.` are 'standard'; everything else is 'custom'.
+5. How do we handle problems that origin from a remote call? Should we wrap them in a 502 Bad Gateway?
+6. It's possible to send problem details to the server, e.g. for asynchronous responses. Is this out of scope or should we mention it? The code on the client as well as on the server would have to look quite different.
+7. Should we remove the `get` (and lowercase the first letter) from the name of an `@Extension` method?

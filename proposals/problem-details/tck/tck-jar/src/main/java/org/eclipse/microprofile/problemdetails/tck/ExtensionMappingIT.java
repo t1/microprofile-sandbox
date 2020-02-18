@@ -21,7 +21,7 @@ class ExtensionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some")
             .hasTitle("Some")
-            .hasDetail(null)
+            .hasNoDetail()
             .hasUuidInstance()
             .check(detail -> then(detail.ex).isEqualTo("some extension"));
     }
@@ -32,7 +32,7 @@ class ExtensionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
-            .hasDetail(null)
+            .hasNoDetail()
             .hasUuidInstance()
             .check(detail -> then(detail.foo).isEqualTo("some extension"));
     }
@@ -43,7 +43,7 @@ class ExtensionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
-            .hasDetail(null)
+            .hasNoDetail()
             .hasUuidInstance()
             .check(detail -> then(detail.ex).isEqualTo("some extension"));
     }
@@ -54,7 +54,7 @@ class ExtensionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
-            .hasDetail(null)
+            .hasNoDetail()
             .hasUuidInstance()
             .check(detail -> then(detail.foo).isEqualTo("some extension"));
     }
@@ -65,7 +65,7 @@ class ExtensionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:some-message")
             .hasTitle("Some Message")
-            .hasDetail(null)
+            .hasNoDetail()
             .hasUuidInstance()
             .check(detail -> {
                 then(detail.m1).isEqualTo("method 1");
