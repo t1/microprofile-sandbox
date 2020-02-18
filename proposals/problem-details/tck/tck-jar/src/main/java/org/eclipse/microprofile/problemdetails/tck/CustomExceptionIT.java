@@ -128,7 +128,7 @@ class CustomExceptionIT {
                 .hasContentType(PROBLEM_DETAIL_JSON)
                 .hasType("urn:problem-type:some-message")
                 .hasTitle("Some Message")
-                .hasDetail("detail a. detail b")
+                .hasDetail("detail a detail b")
                 .hasUuidInstance();
         }
 
@@ -138,7 +138,7 @@ class CustomExceptionIT {
                 .hasContentType(PROBLEM_DETAIL_JSON)
                 .hasType("urn:problem-type:some-message")
                 .hasTitle("Some Message")
-                .hasDetail("detail a. detail b. detail c")
+                .hasDetail("detail a detail b detail c")
                 .hasUuidInstance();
         }
 
