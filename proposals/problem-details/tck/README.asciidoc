@@ -18,7 +18,7 @@
 
 The TCK consists of two artifacts: a `war` with the endpoints to be accessed by a `jar` with the JUnit 5 test cases.
 
-To run these tests from your maven build, create a module with `pom` packaging, a dependency on the TCK jar, and the `maven-failsafe-plugin` configured like the following. A working example is https://github.com/t1/problem-details/tree/master/ri-tck[here].
+To run these tests from your maven build, create a module with `pom` packaging, a dependency on the TCK jar, and the `maven-failsafe-plugin` configured like the following. A working example is https://github.com/t1/problem-details/tree/master/jaxrs-tck[here].
 
 [source,xml]
 ---------------------------------------------------------------
@@ -42,3 +42,5 @@ Before executing, the test cases launch a https://github.com/t1/jee-testcontaine
 | `problemdetails-tck-running` | The URL of an already deployed TCK `war`, useful while developing. E.g. `+http://localhost:8080/problem-details.tck-war+`.
 | `testcontainer-reuse` | _EXPERIMENTAL:_ Set to `true` to start the Testcontainer, but reuse it as long as the config doesn't change. Useful while developing. Uses an *_unstable_* https://javadoc.io/static/org.testcontainers/testcontainers/1.12.3/org/testcontainers/containers/GenericContainer.html#withReuse-boolean-[Testcontainers API]. You also need to set `testcontainers.reuse.enable=true` in a `$HOME/.testcontainers.properties` file.
 |=======================
+
+Configuration options are set with backdoors that set system properties. This will probably work with all configuration systems, but YMMV.

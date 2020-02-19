@@ -1,6 +1,7 @@
 package org.eclipse.microprofile.problemdetails.tckapp;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.ServiceUnavailableException;
@@ -11,6 +12,15 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 @Path("/standard")
 public class StandardExceptionBoundary {
+    @Path("/message-as-detail")
+    @POST public void exceptionMessageAsDetail(@FormParam("enabled") boolean enabled) {
+        if (enabled) {
+            System.clearProperty("exceptionMessageAsDetail");
+        } else {
+            System.setProperty("exceptionMessageAsDetail", "false");
+        }
+    }
+
     @Path("/npe-without-message")
     @POST public void npeWithoutMessage() {
         throw new NullPointerException();
@@ -31,7 +41,7 @@ public class StandardExceptionBoundary {
         throw new IllegalArgumentException("some message");
     }
 
-    @Path("/plain-bad-request")
+    @Path("/bad-request-without-message")
     @POST public void plainBadRequest() {
         throw new BadRequestException();
     }

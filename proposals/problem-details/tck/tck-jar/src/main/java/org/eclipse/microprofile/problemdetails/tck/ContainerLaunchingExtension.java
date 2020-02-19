@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -39,6 +40,7 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
 
     private static StringBuffer LOGS = null;
     private static LoggedAssertBuilder LOGGED_ASSERT_BUILDER = null;
+    private static boolean CAN_CHECK_LOGGING = true;
 
     /**
      * Stopping is done by the ryuk container... see
@@ -46,8 +48,10 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
      */
     @Override public void beforeAll(ExtensionContext context) {
         if (System.getProperty(runningProperty()) != null) {
+            CAN_CHECK_LOGGING = false;
             BASE_URI = URI.create(System.getProperty(runningProperty()));
         } else if (BASE_URI == null) {
+            CAN_CHECK_LOGGING = true;
             JeeContainer container = buildJeeContainer()
                 .withLogConsumer(ContainerLaunchingExtension::consumeLog);
             container.start();
@@ -85,8 +89,8 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
 
     @Override public void afterEach(ExtensionContext context) {
         if (LOGGED_ASSERT_BUILDER != null) {
-            LOGGED_ASSERT_BUILDER = null;
-            throw new IllegalStateException("LoggedAssertBuilder no check()");
+            LOGGED_ASSERT_BUILDER = null; // so the next test can run
+            throw new IllegalStateException("LoggedAssertBuilder without check()");
         }
     }
 
@@ -252,7 +256,10 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
 
     public static LoggedAssertBuilder thenLogged(LogLevel logLevel, String logCategory) {
         if (LOGGED_ASSERT_BUILDER != null)
-            throw new IllegalStateException("thenLogged no check()");
+            throw new IllegalStateException("thenLogged without check()");
+        assumeThat(CAN_CHECK_LOGGING)
+            .describedAs("can't grab logging from running container")
+            .isTrue();
         LOGGED_ASSERT_BUILDER = LoggedAssert.builder().logLevel(logLevel).logCategory(logCategory);
         return LOGGED_ASSERT_BUILDER;
     }

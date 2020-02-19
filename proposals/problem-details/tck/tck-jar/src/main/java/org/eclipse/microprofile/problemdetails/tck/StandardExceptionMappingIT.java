@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Form;
+
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -13,6 +16,7 @@ import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_XML;
 import static org.eclipse.microprofile.problemdetails.LogLevel.ERROR;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.target;
 import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.testPost;
 import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.thenLogged;
 
@@ -34,8 +38,22 @@ class StandardExceptionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:null-pointer")
             .hasTitle("Null Pointer")
-            .hasNoDetail()
+            .hasDetail("some message")
             .hasUuidInstance();
+    }
+
+    @Test void shouldMapNullPointerExceptionWithMessageButDisableExceptionMessageAsDetail() {
+        try {
+            target("/standard/message-as-detail").request()
+                .post(Entity.form(new Form("enabled", "false")));
+
+            testPost("/standard/npe-with-message")
+                .hasNoDetail();
+
+        } finally {
+            target("/standard/message-as-detail").request()
+                .post(Entity.form(new Form("enabled", "true")));
+        }
     }
 
     @Test void shouldMapIllegalArgumentExceptionWithoutMessage() {
@@ -54,7 +72,7 @@ class StandardExceptionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:illegal-argument")
             .hasTitle("Illegal Argument")
-            .hasNoDetail()
+            .hasDetail("some message")
             .hasUuidInstance();
     }
 
@@ -64,6 +82,7 @@ class StandardExceptionMappingIT {
             .type("urn:problem-type:illegal-argument")
             .title("Illegal Argument")
             .status("500")
+            .detail("some message")
             .instance("urn:uuid:") // random uuid
             .stackTrace("java.lang.IllegalArgumentException: some message")
             .check();
@@ -72,7 +91,7 @@ class StandardExceptionMappingIT {
     // TODO TomEE doesn't write some problem detail entities https://github.com/t1/problem-details/issues/17
     @DisabledIfSystemProperty(named = "jee-testcontainer", matches = "tomee")
     @Test void shouldMapClientWebApplicationExceptionWithoutEntityOrMessage() {
-        testPost("standard/plain-bad-request")
+        testPost("standard/bad-request-without-message")
             .hasStatus(BAD_REQUEST)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:bad-request")
@@ -89,7 +108,7 @@ class StandardExceptionMappingIT {
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:bad-request")
             .hasTitle("Bad Request")
-            .hasNoDetail()
+            .hasDetail("some message")
             .hasUuidInstance();
     }
 
