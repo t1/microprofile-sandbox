@@ -1,5 +1,7 @@
 package org.eclipse.microprofile.problemdetails;
 
+import static java.lang.Boolean.TRUE;
+
 public class Constants {
     /**
      * The JSON formatted details body of a failing http request.
@@ -23,4 +25,9 @@ public class Constants {
      * code base.
      */
     public static final String EXCEPTION_MESSAGE_AS_DETAIL = CONFIG_PREFIX + "exceptionMessageAsDetail";
+
+    /**
+     * The default value for {@link #EXCEPTION_MESSAGE_AS_DETAIL}
+     */
+    public static final Boolean EXCEPTION_MESSAGE_AS_DETAIL_DEFAULT = TRUE;
 }
