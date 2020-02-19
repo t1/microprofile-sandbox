@@ -14,4 +14,13 @@ public class Constants {
      * @see <a href="https://tools.ietf.org/html/rfc7807">RFC-7807</a>
      */
     public static final String PROBLEM_DETAIL_XML = "application/problem+xml";
+
+    private static final String CONFIG_PREFIX = Constants.class.getPackage().getName() + ".";
+
+    /**
+     * The config option name to not fall back to use the messages of exceptions for the `detail` field.
+     * Useful if you are not sure that they never contain security critical information in an existing
+     * code base.
+     */
+    public static final String EXCEPTION_MESSAGE_AS_DETAIL = CONFIG_PREFIX + "exceptionMessageAsDetail";
 }
