@@ -9,15 +9,16 @@ import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static org.eclipse.microprofile.problemdetails.Constants.EXCEPTION_MESSAGE_AS_DETAIL;
 
 @Path("/standard")
 public class StandardExceptionBoundary {
     @Path("/message-as-detail")
     @POST public void exceptionMessageAsDetail(@FormParam("enabled") boolean enabled) {
         if (enabled) {
-            System.clearProperty("exceptionMessageAsDetail");
+            System.clearProperty(EXCEPTION_MESSAGE_AS_DETAIL);
         } else {
-            System.setProperty("exceptionMessageAsDetail", "false");
+            System.setProperty(EXCEPTION_MESSAGE_AS_DETAIL, "false");
         }
     }
 
