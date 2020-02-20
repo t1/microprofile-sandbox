@@ -67,7 +67,7 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
 
     protected JeeContainer buildJeeContainer() {
         String[] libs = System.getProperty("problemdetails-tck-libs", "").split("(\\s|,)");
-        log.warning("############################### problemdetails-tck-libs: [" +
+        System.out.println("############################### problemdetails-tck-libs: [" +
             System.getProperty("problemdetails-tck-libs", "") + "]");
         return buildJeeContainer(Stream.of(libs));
     }
