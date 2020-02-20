@@ -73,6 +73,7 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
     public static JeeContainer buildJeeContainer(Stream<String> libs) {
         Mod[] mods = libs
             .filter(uri -> !uri.isEmpty())
+            .peek(uri -> log.info("add problemdetails tck lib '{}'", uri))
             .map(AddLibMod::addLib)
             .toArray(Mod[]::new);
         return JeeContainer.create()
