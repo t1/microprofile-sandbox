@@ -19,7 +19,9 @@ import org.testcontainers.containers.output.OutputFrame;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -62,7 +64,7 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
     protected String runningProperty() { return "problemdetails-tck-running"; }
 
     protected JeeContainer buildJeeContainer() {
-        String[] libs = System.getProperty("problemdetails-tck-libs", "").split("\\s");
+        String[] libs = System.getProperty("problemdetails-tck-libs", "").split("(\\s|,)");
         return buildJeeContainer(Stream.of(libs));
     }
 
@@ -92,6 +94,21 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
             LOGGED_ASSERT_BUILDER = null; // so the next test can run
             throw new IllegalStateException("LoggedAssertBuilder without check()");
         }
+    }
+
+
+    public static void withDisabledExceptionMessageAsDetail(Runnable runnable) {
+        try {
+            setExceptionMessageAsDetail(false);
+            runnable.run();
+        } finally {
+            setExceptionMessageAsDetail(true);
+        }
+    }
+
+    private static void setExceptionMessageAsDetail(boolean enabled) {
+        target("/backdoors/message-as-detail").request()
+            .post(Entity.form(new Form("enabled", Boolean.toString(enabled))));
     }
 
 

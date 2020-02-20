@@ -15,6 +15,7 @@ import static org.eclipse.microprofile.problemdetails.LogLevel.OFF;
 import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.testPost;
 import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.thenLogged;
 import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.thenNothingLoggedTo;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.withDisabledExceptionMessageAsDetail;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 
 @ExtendWith(ContainerLaunchingExtension.class)
@@ -70,6 +71,15 @@ class CustomExceptionIT {
             .hasUuidInstance();
     }
 
+    @Test void shouldMapCustomExceptionWithMessageButDisableExceptionMessageAsDetail() {
+        withDisabledExceptionMessageAsDetail(() -> testPost("/custom/forbidden-with-message")
+            .hasStatus(FORBIDDEN)
+            .hasContentType(PROBLEM_DETAIL_JSON)
+            .hasType("urn:problem-type:something-forbidden")
+            .hasTitle("SomethingForbidden")
+            .hasNoDetail()
+            .hasUuidInstance());
+    }
 
     @Nested class ExplicitDetail {
         @Test void shouldMapDetailMethod() {

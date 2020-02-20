@@ -56,6 +56,15 @@ public class CustomExceptionBoundary {
         throw new SomethingForbiddenException();
     }
 
+    @Path("/forbidden-with-message")
+    @POST public void forbiddenWithMessage() {
+        @Status(FORBIDDEN)
+        class SomethingForbiddenException extends RuntimeException {
+            SomethingForbiddenException() { super("some-message"); }
+        }
+        throw new SomethingForbiddenException();
+    }
+
     @Path("/public-detail-method")
     @POST public void publicDetailMethod() {
         class SomeMessageException extends RuntimeException {

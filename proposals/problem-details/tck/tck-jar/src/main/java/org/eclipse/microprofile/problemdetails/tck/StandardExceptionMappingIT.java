@@ -5,9 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Form;
-
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -16,9 +13,9 @@ import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_JSON;
 import static org.eclipse.microprofile.problemdetails.Constants.PROBLEM_DETAIL_XML;
 import static org.eclipse.microprofile.problemdetails.LogLevel.ERROR;
-import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.target;
 import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.testPost;
 import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.thenLogged;
+import static org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.withDisabledExceptionMessageAsDetail;
 
 @ExtendWith(ContainerLaunchingExtension.class)
 class StandardExceptionMappingIT {
@@ -43,17 +40,13 @@ class StandardExceptionMappingIT {
     }
 
     @Test void shouldMapNullPointerExceptionWithMessageButDisableExceptionMessageAsDetail() {
-        try {
-            target("/standard/message-as-detail").request()
-                .post(Entity.form(new Form("enabled", "false")));
-
-            testPost("/standard/npe-with-message")
-                .hasNoDetail();
-
-        } finally {
-            target("/standard/message-as-detail").request()
-                .post(Entity.form(new Form("enabled", "true")));
-        }
+        withDisabledExceptionMessageAsDetail(() -> testPost("/standard/npe-with-message")
+            .hasStatus(INTERNAL_SERVER_ERROR)
+            .hasContentType(PROBLEM_DETAIL_JSON)
+            .hasType("urn:problem-type:null-pointer")
+            .hasTitle("Null Pointer")
+            .hasNoDetail()
+            .hasUuidInstance());
     }
 
     @Test void shouldMapIllegalArgumentExceptionWithoutMessage() {
