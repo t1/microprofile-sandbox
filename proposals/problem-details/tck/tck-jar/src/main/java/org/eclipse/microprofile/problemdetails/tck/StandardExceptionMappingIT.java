@@ -81,8 +81,6 @@ class StandardExceptionMappingIT {
             .check();
     }
 
-    // TODO TomEE doesn't write some problem detail entities https://github.com/t1/problem-details/issues/17
-    @DisabledIfSystemProperty(named = "jee-testcontainer", matches = "tomee")
     @Test void shouldMapClientWebApplicationExceptionWithoutEntityOrMessage() {
         testPost("standard/bad-request-without-message")
             .hasStatus(BAD_REQUEST)
@@ -93,8 +91,6 @@ class StandardExceptionMappingIT {
             .hasUuidInstance();
     }
 
-    // TODO TomEE doesn't write some problem detail entities https://github.com/t1/problem-details/issues/17
-    @DisabledIfSystemProperty(named = "jee-testcontainer", matches = "tomee")
     @Test void shouldMapClientWebApplicationExceptionWithoutEntityButMessage() {
         testPost("/standard/bad-request-with-message")
             .hasStatus(BAD_REQUEST)
@@ -112,8 +108,6 @@ class StandardExceptionMappingIT {
             .hasBody("the body");
     }
 
-    // TODO TomEE doesn't write some problem detail entities https://github.com/t1/problem-details/issues/17
-    @DisabledIfSystemProperty(named = "jee-testcontainer", matches = "tomee")
     @Test void shouldMapServerWebApplicationExceptionWithoutEntityOrMessage() {
         testPost("/standard/plain-service-unavailable")
             .hasStatus(SERVICE_UNAVAILABLE)

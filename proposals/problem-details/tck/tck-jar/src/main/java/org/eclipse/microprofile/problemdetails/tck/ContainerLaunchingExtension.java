@@ -31,6 +31,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.Response.Status.NO_CONTENT;
+import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -107,8 +109,11 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
     }
 
     private static void setExceptionMessageAsDetail(boolean enabled) {
-        target("/backdoors/message-as-detail").request()
+        Response response = target("/backdoors/message-as-detail").request()
             .post(Entity.form(new Form("enabled", Boolean.toString(enabled))));
+        then(response.getStatusInfo())
+            .describedAs(response.hasEntity() ? response.readEntity(String.class) : "")
+            .isIn(OK, NO_CONTENT);
     }
 
 
@@ -310,7 +315,7 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
 
         public void check() {
             String logLevel = this.logLevel.toString();
-            if (isOpenLiberty() && "ERROR".equals(logLevel)) {
+            if ("ERROR".equals(logLevel) && usesJavaUtilLogging()) {
                 logLevel = "SEVERE";
             }
             thenLogsContain(logLevel);
@@ -327,13 +332,14 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
         }
     }
 
-    private static boolean isOpenLiberty() {
-        return System.getProperty("jee-testcontainer", "").matches("open-liberty.*");
+    private static boolean usesJavaUtilLogging() {
+        return System.getProperty("jee-testcontainer", "")
+            .matches("(open-liberty.*|payara.*)");
     }
 
     private static void thenLogsContainIfNotNull(String field) {
         if (field != null) {
-            if (isOpenLiberty()) {
+            if (usesJavaUtilLogging()) {
                 field = field.replace("/", "\\/"); // jee-testcontainer open-liberty logs as json
             }
             thenLogsContain(field);

@@ -76,7 +76,7 @@ class CustomExceptionIT {
             .hasStatus(FORBIDDEN)
             .hasContentType(PROBLEM_DETAIL_JSON)
             .hasType("urn:problem-type:something-forbidden")
-            .hasTitle("SomethingForbidden")
+            .hasTitle("Something Forbidden")
             .hasNoDetail()
             .hasUuidInstance());
     }
