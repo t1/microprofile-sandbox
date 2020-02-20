@@ -1,6 +1,6 @@
 package org.eclipse.microprofile.problemdetails.tck;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.java.Log;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,7 +18,7 @@ import static org.eclipse.microprofile.problemdetails.tck.MicroprofileRestClient
 import static org.eclipse.microprofile.problemdetails.tck.MicroprofileRestClientBridgeIT.Mode.mpm;
 import static org.eclipse.microprofile.problemdetails.tck.MicroprofileRestClientBridgeIT.Mode.webTarget;
 
-@Slf4j
+@Log
 @ExtendWith(ContainerLaunchingExtension.class)
 class MicroprofileRestClientBridgeIT {
 
@@ -81,7 +81,7 @@ class MicroprofileRestClientBridgeIT {
 
     private Response get(String path, Mode mode) {
         WebTarget target = ContainerLaunchingExtension.target(path).queryParam("mode", mode);
-        log.info("GET {}", target.getUri());
+        log.info("GET " + target.getUri());
         return target
             .request(APPLICATION_JSON_TYPE)
             .get();

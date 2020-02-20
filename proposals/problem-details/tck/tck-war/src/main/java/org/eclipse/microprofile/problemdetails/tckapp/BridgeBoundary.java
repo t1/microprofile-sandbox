@@ -3,7 +3,7 @@ package org.eclipse.microprofile.problemdetails.tckapp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.java.Log;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.problemdetails.ResponseStatus;
 import org.eclipse.microprofile.problemdetails.Status;
@@ -23,10 +23,11 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.function.Function;
 
+import static java.util.logging.Level.WARNING;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 
-@Slf4j
+@Log
 @Path("/bridge")
 public class BridgeBoundary {
     @Data @NoArgsConstructor @AllArgsConstructor
@@ -52,16 +53,16 @@ public class BridgeBoundary {
 
     @Path("/indirect/{state}")
     @GET public Reply indirect(@PathParam("state") String state, @NotNull @QueryParam("mode") String mode) {
-        log.info("call indirect {} :: {}", state, mode);
+        log.info("call indirect " + state + " :: " + mode);
 
         Function<String, Reply> target = by(mode);
 
         try {
             Reply reply = target.apply(state);
-            log.info("indirect call reply {}", reply);
+            log.info("indirect call reply " + reply);
             return reply;
         } catch (RuntimeException e) {
-            log.info("indirect call exception", e);
+            log.log(WARNING, "indirect call exception", e);
             throw e;
         }
     }
@@ -89,7 +90,7 @@ public class BridgeBoundary {
 
     @Path("/target/{state}")
     @GET public Response target(@PathParam("state") String state) {
-        log.info("target {}", state);
+        log.info("target " + state);
         switch (state) {
             case "ok":
                 return Response.ok(new Reply("okay")).build();

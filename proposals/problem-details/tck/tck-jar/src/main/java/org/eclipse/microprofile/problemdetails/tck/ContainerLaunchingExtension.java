@@ -6,7 +6,7 @@ import com.github.t1.testcontainers.jee.Mod;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.java.Log;
 import org.assertj.core.api.Condition;
 import org.eclipse.microprofile.problemdetails.LogLevel;
 import org.eclipse.microprofile.problemdetails.tck.ContainerLaunchingExtension.LoggedAssert.LoggedAssertBuilder;
@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@Slf4j
+@Log
 public class ContainerLaunchingExtension implements Extension, BeforeAllCallback, BeforeEachCallback, AfterEachCallback {
     protected static URI BASE_URI = null;
 
@@ -73,12 +73,15 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
     public static JeeContainer buildJeeContainer(Stream<String> libs) {
         Mod[] mods = libs
             .filter(uri -> !uri.isEmpty())
-            .peek(uri -> log.info("add problemdetails tck lib '{}'", uri))
+            .peek(uri -> log.warning("add problemdetails tck lib '" + uri + "'"))
             .map(AddLibMod::addLib)
             .toArray(Mod[]::new);
         return JeeContainer.create()
-            // TODO get the version, maybe from the manifest
-            .withDeployment("urn:mvn:io.microprofile.sandbox:problem-details.tck-war:1.0.0-SNAPSHOT:war", mods);
+            .withDeployment("urn:mvn:io.microprofile.sandbox:problem-details.tck-war:" + version() + ":war", mods);
+    }
+
+    private static String version() {
+        return ContainerLaunchingExtension.class.getPackage().getImplementationVersion();
     }
 
     protected static void consumeLog(OutputFrame outputFrame) {
@@ -141,7 +144,7 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
 
     public static WebTarget target(String path) {
         WebTarget target = target().path(path);
-        log.info("target: {}", target.getUri());
+        log.info("target: " + target.getUri());
         return target;
     }
 
