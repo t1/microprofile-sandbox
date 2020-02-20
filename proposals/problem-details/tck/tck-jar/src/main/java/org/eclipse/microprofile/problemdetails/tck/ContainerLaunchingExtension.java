@@ -28,14 +28,17 @@ import javax.ws.rs.core.Response.Status;
 import java.net.URI;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static java.util.regex.Pattern.LITERAL;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.eclipse.microprofile.problemdetails.LogLevel.ERROR;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Log
@@ -67,8 +70,6 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
 
     protected JeeContainer buildJeeContainer() {
         String[] libs = System.getProperty("problemdetails-tck-libs", "").split("(\\s|,)");
-        System.out.println("############################### problemdetails-tck-libs: [" +
-            System.getProperty("problemdetails-tck-libs", "") + "]");
         return buildJeeContainer(Stream.of(libs));
     }
 
@@ -90,7 +91,7 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
         if (LOGS == null) {
             LOGS = new StringBuffer();
         }
-        LOGS.append(outputFrame.getUtf8String());
+        LOGS.append(outputFrame.getUtf8String().replace("\\/", "/")); // e.g. open-liberty json logs escape slashes
     }
 
     @Override public void beforeEach(ExtensionContext context) {
@@ -320,11 +321,13 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
         }
 
         public void check() {
-            String logLevel = this.logLevel.toString();
-            if ("ERROR".equals(logLevel) && usesJavaUtilLogging()) {
-                logLevel = "SEVERE";
+            LogLevel logLevel = this.logLevel;
+            if (logLevel == ERROR) {
+                thenLogsContain(Pattern.compile("(ERROR|SEVERE)"));
+            } else {
+                thenLogsContain(logLevel.toString());
             }
-            thenLogsContain(logLevel);
+
             thenLogsContain(logCategory);
             thenLogsContainIfNotNull(type);
             thenLogsContainIfNotNull(title);
@@ -338,37 +341,30 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
         }
     }
 
-    private static boolean usesJavaUtilLogging() {
-        return System.getProperty("jee-testcontainer", "")
-            .matches("(open-liberty.*|payara.*)");
-    }
-
     private static void thenLogsContainIfNotNull(String field) {
         if (field != null) {
-            if (usesJavaUtilLogging()) {
-                field = field.replace("/", "\\/"); // jee-testcontainer open-liberty logs as json
-            }
             thenLogsContain(field);
         }
     }
 
-    @SneakyThrows(InterruptedException.class)
     private static void thenLogsContain(String value) {
+        thenLogsContain(Pattern.compile(value, LITERAL));
+    }
+
+    @SneakyThrows(InterruptedException.class)
+    private static void thenLogsContain(Pattern pattern) {
         long start = System.currentTimeMillis();
         while (System.currentTimeMillis() < start + 1000) {
-            if (LOGS != null && LOGS.toString().contains(value)) {
+            if (LOGS != null && pattern.matcher(LOGS.toString()).find()) {
                 return;
             }
             Thread.sleep(10);
         }
-        if (!value.endsWith("\n")) {
-            value += "\n";
-        }
         fail("\n" +
             "---------------------- logs\n" +
             LOGS +
-            "---------------------- should contain\n" +
-            value +
+            "---------------------- should match\n" +
+            pattern + "\n" +
             "---------------------- but didn't within 1 second");
     }
 }
