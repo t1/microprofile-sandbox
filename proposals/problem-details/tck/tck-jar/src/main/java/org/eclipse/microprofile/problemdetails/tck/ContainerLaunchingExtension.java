@@ -84,7 +84,8 @@ public class ContainerLaunchingExtension implements Extension, BeforeAllCallback
     }
 
     private static String version() {
-        return ContainerLaunchingExtension.class.getPackage().getImplementationVersion();
+        return System.getProperty("microprofile.problemdetails.version",
+            ContainerLaunchingExtension.class.getPackage().getImplementationVersion());
     }
 
     protected static void consumeLog(OutputFrame outputFrame) {
